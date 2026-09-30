@@ -1,0 +1,49 @@
+{
+  "name": "mini-react",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A tiny React-like UI library in one file: virtual DOM with keyed diffing, hooks, context and memo. About 3.5 KB gzipped, no dependencies.",
+  "type": "module",
+  "main": "./src/mini-react.js",
+  "module": "./src/mini-react.js",
+  "exports": {
+    ".": "./src/mini-react.js",
+    "./global": "./dist/mini-react.global.js",
+    "./min": "./dist/mini-react.min.js"
+  },
+  "unpkg": "dist/mini-react.min.js",
+  "jsdelivr": "dist/mini-react.min.js",
+  "files": [
+    "src",
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node test/mini-react.test.mjs",
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "react",
+    "virtual-dom",
+    "hooks",
+    "ui",
+    "framework",
+    "tiny",
+    "educational"
+  ],
+  "author": "Vladimir Carrer",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vladocar/mini-react.git"
+  },
+  "homepage": "https://vladocar.github.io/mini-react/",
+  "bugs": {
+    "url": "https://github.com/vladocar/mini-react/issues"
+  },
+  "devDependencies": {
+    "jsdom": "^30.1.1",
+    "terser": "^5.51.2"
+  }
+}

@@ -1,0 +1,1233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mini-react Tutorial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --bg: #f3f6f7;
+    --surface: #ffffff;
+    --ink: #15212b;
+    --muted: #5a6a77;
+    --line: #d9e1e6;
+    --accent: #0c7a84;
+    --accent-soft: #e1f1f2;
+    --code-bg: #f7f9fa;
+    --danger: #b3412e;
+    --danger-soft: #fbece8;
+    --tk-comment: #7b8a95;
+    --tk-string: #2f7d3b;
+    --tk-keyword: #8a3ca8;
+    --tk-number: #b35a00;
+    --tk-call: #0c6e77;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0e1418; --surface: #161e24; --ink: #e4ecf1; --muted: #93a3af; --line: #28343c;
+      --accent: #3fc1cb; --accent-soft: #173238; --code-bg: #111920; --danger: #e27a66; --danger-soft: #3a1f1a;
+      --tk-comment: #7d8d99; --tk-string: #8fd18f; --tk-keyword: #d19df0; --tk-number: #f0b36b; --tk-call: #6fd6de;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0e1418; --surface: #161e24; --ink: #e4ecf1; --muted: #93a3af; --line: #28343c;
+    --accent: #3fc1cb; --accent-soft: #173238; --code-bg: #111920; --danger: #e27a66; --danger-soft: #3a1f1a;
+    --tk-comment: #7d8d99; --tk-string: #8fd18f; --tk-keyword: #d19df0; --tk-number: #f0b36b; --tk-call: #6fd6de;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body { background: var(--bg); color: var(--ink); font: 16px/1.65 var(--sans); padding: 0 16px; }
+  a { color: var(--accent); }
+  :is(a, button, textarea, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .layout { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 48px; padding-block: 40px 72px; }
+  @media (max-width: 920px) { .layout { grid-template-columns: minmax(0, 1fr); gap: 24px; padding-block: 28px 56px; } }
+
+  /* Sidebar */
+  .toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; display: grid; gap: 14px; max-height: calc(100vh - 48px); overflow-y: auto; }
+  .toc .brand { font: 600 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; counter-reset: lesson; }
+  .toc li a { display: grid; grid-template-columns: 2.2ch 1fr; gap: 8px; padding: 5px 10px; border-radius: 6px; color: var(--muted); text-decoration: none; font-size: 14px; line-height: 1.4; }
+  .toc li a .n { font: 12px/1.6 var(--mono); color: var(--muted); }
+  .toc li a:hover { color: var(--ink); background: var(--surface); }
+  .toc li a.current { color: var(--ink); background: var(--accent-soft); font-weight: 500; }
+  .toc li a.current .n { color: var(--accent); }
+  .toc .links { display: grid; gap: 4px; font-size: 13.5px; border-top: 1px solid var(--line); padding-top: 12px; }
+  @media (max-width: 920px) {
+    .toc { position: static; max-height: none; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+    .toc ol { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  }
+
+  /* Content */
+  main { min-width: 0; }
+  .intro { display: grid; gap: 12px; margin-bottom: 8px; max-width: 70ch; }
+  h1 { font-size: clamp(30px, 4.6vw, 44px); line-height: 1.08; margin: 0; letter-spacing: -.02em; text-wrap: balance; }
+  .lede { margin: 0; font-size: 18px; color: var(--muted); }
+  .howto { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-size: 14.5px; max-width: 70ch; }
+  .howto kbd { font: 12px var(--mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--code-bg); }
+
+  .lesson { padding-top: 52px; scroll-margin-top: 12px; display: grid; gap: 16px; }
+  .lesson > * { max-width: 70ch; }
+  .lesson > .example, .lesson > .table-box, .lesson > pre.code { max-width: none; }
+  .lesson-head { display: grid; gap: 4px; }
+  .lesson-num { font: 600 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  h2 { font-size: 28px; line-height: 1.2; margin: 0; letter-spacing: -.015em; text-wrap: balance; }
+  h3 { font-size: 18px; margin: 12px 0 0; }
+  p { margin: 0; }
+  ul.points { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+  code { font-family: var(--mono); font-size: .86em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  .tip { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; color: var(--ink); font-size: 15px; }
+  .tip strong { color: var(--accent); }
+  .warn { border-left-color: var(--danger); }
+  .warn strong { color: var(--danger); }
+
+  pre.code { margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font: 13.5px/1.6 var(--mono); tab-size: 2; }
+  pre.code .file { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+
+  /* Syntax colors */
+  .t-c { color: var(--tk-comment); font-style: italic; }
+  .t-s { color: var(--tk-string); }
+  .t-k { color: var(--tk-keyword); }
+  .t-n { color: var(--tk-number); }
+  .t-f { color: var(--tk-call); font-weight: 600; }
+
+  /* Live example */
+  .example { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); overflow: hidden; }
+  .ex-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px 8px 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .ex-title { font: 600 12px/1.3 var(--mono); color: var(--muted); letter-spacing: .04em; }
+  .ex-title .edited { color: var(--accent); margin-left: 6px; }
+  .ex-actions { display: flex; gap: 6px; }
+  .ex-actions button { font: 500 13px/1 var(--sans); padding: 7px 11px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+  .ex-actions button.run { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+  .ex-actions button:hover { border-color: var(--accent); }
+  .editor { position: relative; background: var(--code-bg); font: 13.5px/1.6 var(--mono); tab-size: 2; }
+  .editor pre, .editor textarea {
+    margin: 0; border: 0; padding: 14px 16px 24px; font: inherit; line-height: inherit; tab-size: 2;
+    white-space: pre; overflow-wrap: normal; word-break: normal; letter-spacing: 0;
+  }
+  .editor pre { pointer-events: none; overflow: hidden; color: var(--ink); min-height: 100%; }
+  .editor textarea {
+    position: absolute; inset: 0; width: 100%; height: 100%; resize: none; background: transparent;
+    color: transparent; caret-color: var(--ink); overflow-x: auto; overflow-y: hidden;
+  }
+  .editor textarea::selection { background: rgba(63, 193, 203, .3); color: transparent; }
+  .editor textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .ex-out { border-top: 1px solid var(--line); display: grid; }
+  .ex-label { font: 600 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 10px 14px 0; }
+  .ex-error { margin: 10px 14px 0; padding: 10px 12px; border-radius: 8px; background: var(--danger-soft); color: var(--danger); font: 13px/1.5 var(--mono); white-space: pre-wrap; }
+  .ex-log { margin: 0 14px 12px; padding: 8px 10px; border-radius: 8px; background: var(--code-bg); border: 1px solid var(--line); font: 12.5px/1.55 var(--mono); max-height: 150px; overflow-y: auto; white-space: pre-wrap; }
+  .ex-log .n { color: var(--muted); margin-right: 8px; }
+  .ex-note { margin: 10px 14px 0; font-size: 13px; color: var(--muted); }
+
+  /* Preview: a few ready-made classes the examples use */
+  .preview { padding: 14px; font-size: 15px; line-height: 1.5; min-height: 48px; overflow-x: auto; }
+  .preview button { font: inherit; font-size: 14px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); cursor: pointer; }
+  .preview button:hover:not(:disabled) { border-color: var(--accent); }
+  .preview button:disabled { opacity: .45; cursor: not-allowed; }
+  .preview button.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+  .preview input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), .preview select, .preview textarea {
+    font: inherit; font-size: 14px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink);
+  }
+  .preview input[type="checkbox"], .preview input[type="radio"], .preview input[type="range"] { accent-color: var(--accent); }
+  .preview :is(button, input, select, textarea):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .preview h1, .preview h2, .preview h3, .preview p { margin: 0; }
+  .preview ul { margin: 0; padding-left: 20px; }
+  .preview pre { margin: 0; padding: 10px; border-radius: 7px; background: var(--code-bg); font: 12.5px/1.5 var(--mono); }
+  .preview .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .preview .stack { display: grid; gap: 10px; justify-items: start; }
+  .preview .card { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 6px; }
+  .preview .muted { color: var(--muted); }
+  .preview .big { font: 600 34px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+  .preview .done { text-decoration: line-through; color: var(--muted); }
+  .preview .avatar { border-radius: 50%; background: var(--accent); color: var(--surface); display: grid; place-items: center; font-weight: 600; flex: none; }
+  .preview .user-card { display: flex; gap: 12px; align-items: center; padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; }
+  .preview .tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); }
+  .preview .selected { background: var(--accent-soft); border-color: var(--accent); }
+
+  .table-box { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 14px; border-bottom: 1px solid var(--line); }
+  th { font: 600 11px/1.5 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--code-bg); }
+  tr:last-child td { border-bottom: 0; }
+  td code { white-space: nowrap; }
+
+  .next { margin-top: 56px; padding: 18px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); display: grid; gap: 8px; max-width: 70ch; }
+  .next h2 { font-size: 22px; }
+</style>
+
+<div class="layout">
+  <nav class="toc" aria-label="Lessons">
+    <span class="brand">mini-react tutorial</span>
+    <ol id="toc"></ol>
+    <div class="links">
+      <a href="demo.html">Live demos →</a>
+      <a href="bench.html">Benchmark vs. React →</a>
+    </div>
+  </nav>
+
+  <main id="lessons">
+    <div class="intro">
+      <h1>Build interfaces with mini-react</h1>
+      <p class="lede">A hands-on tutorial. You'll go from your first element to a complete small app, one idea at a time. If you know React, most of this will feel familiar.</p>
+      <div class="howto">
+        <span aria-hidden="true">▶</span>
+        <span>Every example on this page is live. Change the code and press <strong>Run</strong> (or <kbd>Ctrl</kbd>+<kbd>Enter</kbd>). <strong>Reset</strong> brings back the original. Anything you pass to <code>log()</code> appears under the result.</span>
+      </div>
+    </div>
+
+    <!-- 1 -->
+    <section class="lesson" id="setup" data-title="Setup">
+      <div class="lesson-head"><span class="lesson-num">Lesson 1</span><h2>Setup and your first render</h2></div>
+      <p>mini-react is a single file. Copy <code>mini-react.global.js</code> from the <code>dist</code> folder next to your HTML page and load it with a normal script tag. It creates one global object, <code>MiniReact</code>, with everything in it.</p>
+      <pre class="code" data-lang="html"><span class="file">index.html</span>&lt;div id="app"&gt;&lt;/div&gt;
+
+&lt;script src="mini-react.global.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  const { h, createRoot } = MiniReact;
+
+  const app = h('h1', null, 'Hello, world!');
+  createRoot(document.getElementById('app')).render(app);
+&lt;/script&gt;</pre>
+      <p>That page works when you double-click it, with no server and no build step. Two functions do all the work:</p>
+      <ul class="points">
+        <li><code>h(type, props, ...children)</code> describes a piece of UI. It returns a plain object. Nothing appears on the page yet.</li>
+        <li><code>createRoot(element).render(ui)</code> takes that description and builds the real page inside <code>element</code>.</li>
+      </ul>
+      <p>Try it below. In the examples, <code>container</code> is the result area, and all the functions from <code>MiniReact</code> are already available.</p>
+      <div class="example" data-example="hello" data-title="Hello world"></div>
+      <p class="tip"><strong>Try this:</strong> change the text, or change <code>'h1'</code> to <code>'h3'</code>, and press Run.</p>
+    </section>
+
+    <!-- 2 -->
+    <section class="lesson" id="elements" data-title="Elements">
+      <div class="lesson-head"><span class="lesson-num">Lesson 2</span><h2>Elements, props and children</h2></div>
+      <p>The first argument of <code>h()</code> is a tag name. The second is an object of <b>props</b> (attributes, styles, events), or <code>null</code>. Everything after that is children: text, numbers, other elements or arrays of them.</p>
+      <ul class="points">
+        <li>Use <code>className</code> for CSS classes and <code>htmlFor</code> on labels, like in React.</li>
+        <li><code>style</code> takes an object. Numbers get <code>px</code> added, except for things like <code>opacity</code> and <code>zIndex</code>.</li>
+        <li><code>null</code>, <code>false</code> and <code>true</code> render nothing. That makes <code>condition &amp;&amp; h(...)</code> a handy way to show something only sometimes.</li>
+        <li>An array of elements renders each item. Give each one a <code>key</code> (more in Lesson 6).</li>
+      </ul>
+      <div class="example" data-example="elements" data-title="Props, styles and children"></div>
+      <p class="tip"><strong>Try this:</strong> set <code>online</code> to <code>false</code>, and add a fourth task to the list.</p>
+    </section>
+
+    <!-- 3 -->
+    <section class="lesson" id="components" data-title="Components">
+      <div class="lesson-head"><span class="lesson-num">Lesson 3</span><h2>Components</h2></div>
+      <p>A component is a function that takes <b>props</b> and returns elements. Use it by passing the function itself to <code>h()</code> instead of a tag name: <code>h(Avatar, {'{'} name: 'Ada' {'}'})</code>. Component names start with a capital letter by convention.</p>
+      <p>Whatever you put between the tags arrives as <code>props.children</code>. That lets you build wrappers like cards, dialogs and layouts.</p>
+      <div class="example" data-example="components" data-title="Components and children"></div>
+      <p class="tip"><strong>Try this:</strong> give one <code>Avatar</code> a <code>size</code> of 64, and add a third <code>UserCard</code>.</p>
+      <p>A component can return an element, a string, an array, or <code>null</code> to render nothing. To return several elements without a wrapper <code>div</code>, use a <code>Fragment</code>: <code>h(Fragment, null, a, b, c)</code>.</p>
+    </section>
+
+    <!-- 4 -->
+    <section class="lesson" id="state" data-title="State">
+      <div class="lesson-head"><span class="lesson-num">Lesson 4</span><h2>State with useState</h2></div>
+      <p>Components remember values with <b>state</b>. <code>useState(initial)</code> returns the current value and a function to change it. When you call that function, mini-react runs your component again and updates the page where something changed.</p>
+      <div class="example" data-example="counter" data-title="Counter"></div>
+      <p>Watch the log as you click. The "+2" button calls <code>setCount</code> twice, but the component renders only once. Updates made at the same time are <b>batched</b> into one render.</p>
+      <p class="tip"><strong>Use the function form</strong> <code>setCount(c =&gt; c + 1)</code> when the new value depends on the old one. With <code>setCount(count + 1)</code> twice, both calls would see the same old <code>count</code>, and you'd only get +1.</p>
+
+      <h3>Objects and arrays: make a new copy</h3>
+      <p>mini-react compares the old and new state with <code>Object.is</code>. If you change an object in place and pass the same object back, nothing looks different, so nothing re-renders. Create a new object or array instead, with spread (<code>...</code>), <code>map</code> or <code>filter</code>.</p>
+      <div class="example" data-example="immutable" data-title="Updating objects and arrays"></div>
+      <p class="tip"><strong>Try this:</strong> uncomment the "wrong" button and click it. The list doesn't update until something else causes a render.</p>
+    </section>
+
+    <!-- 5 -->
+    <section class="lesson" id="events" data-title="Events and forms">
+      <div class="lesson-head"><span class="lesson-num">Lesson 5</span><h2>Events and forms</h2></div>
+      <p>Props that start with <code>on</code> are event handlers: <code>onClick</code>, <code>onInput</code>, <code>onKeyDown</code>, <code>onSubmit</code>, <code>onMouseEnter</code> and so on. The handler gets the browser's normal event object.</p>
+      <p>For form fields, pass the value from state and update the state in <code>onChange</code>. This is called a <b>controlled input</b>: state is the single source of truth, so you can validate, reset or transform the value at any time. Like in React, <code>onChange</code> on a text field fires on every keystroke.</p>
+      <div class="example" data-example="form" data-title="A controlled form"></div>
+      <ul class="points">
+        <li>Text fields and selects use <code>value</code>. Checkboxes and radio buttons use <code>checked</code>.</li>
+        <li>One <code>update</code> function handles every field, by reading the field's <code>name</code>.</li>
+        <li>Call <code>e.preventDefault()</code> in <code>onSubmit</code>, or the browser reloads the page.</li>
+      </ul>
+    </section>
+
+    <!-- 6 -->
+    <section class="lesson" id="lists" data-title="Lists and keys">
+      <div class="lesson-head"><span class="lesson-num">Lesson 6</span><h2>Lists and keys</h2></div>
+      <p>To render a list, <code>map</code> your data to elements. Give each element a <code>key</code> that is unique among its siblings and stays the same for the same item, such as an id from your data.</p>
+      <p>Keys tell mini-react which item is which between renders. When the list is reordered or an item is removed, each existing item keeps its page element and its state, and only the moved items are touched.</p>
+      <div class="example" data-example="todos" data-title="Todo list with keys"></div>
+      <p class="tip warn"><strong>Avoid using the array index as the key</strong> for lists that can be reordered or filtered. When an item is removed, every item after it gets a new index, and state can end up attached to the wrong item. The "Why keys matter" panel in the <a href="demo.html#lists">demos</a> shows this side by side.</p>
+    </section>
+
+    <!-- 7 -->
+    <section class="lesson" id="effects" data-title="Effects">
+      <div class="lesson-head"><span class="lesson-num">Lesson 7</span><h2>Effects with useEffect</h2></div>
+      <p>Rendering should only calculate what to show. Everything else is a <b>side effect</b>: timers, requests, subscriptions, or working with the page directly. Put those in <code>useEffect(fn, deps)</code>. It runs after the page is updated.</p>
+      <ul class="points">
+        <li><code>deps</code> is a list of values. The effect runs again only when one of them changes.</li>
+        <li><code>[]</code> means "only after the first render".</li>
+        <li>Leave out <code>deps</code> to run after every render.</li>
+        <li>Return a <b>cleanup</b> function to undo the effect. It runs before the effect runs again, and when the component is removed.</li>
+      </ul>
+      <div class="example" data-example="clock" data-title="Timer with cleanup"></div>
+      <p>Click "Hide clock" and watch the log. Without the cleanup, the timer would keep running after the clock is gone.</p>
+
+      <h3>Loading data</h3>
+      <p>Effects are also where you load data. Put everything the request depends on in <code>deps</code>. Use a flag in the cleanup to ignore answers that arrive after a newer request started, or a slow old answer could replace a newer one.</p>
+      <div class="example" data-example="search" data-title="Search with a fake server"></div>
+      <p class="tip"><strong>Try this:</strong> type fast. The log shows which answers were ignored because a newer search had already started.</p>
+    </section>
+
+    <!-- 8 -->
+    <section class="lesson" id="refs" data-title="Refs">
+      <div class="lesson-head"><span class="lesson-num">Lesson 8</span><h2>Refs with useRef</h2></div>
+      <p><code>useRef(initial)</code> gives you a box, <code>{'{'} current: initial {'}'}</code>, that keeps its content between renders. It has two uses:</p>
+      <ul class="points">
+        <li><b>Reaching page elements.</b> Pass the ref as the <code>ref</code> prop. After rendering, <code>ref.current</code> is the real element, so you can call <code>focus()</code>, measure it, or draw on a canvas.</li>
+        <li><b>Remembering values without re-rendering.</b> Changing <code>ref.current</code> does not cause a render. Use it for timer ids, previous values or counters you don't display.</li>
+      </ul>
+      <div class="example" data-example="refs" data-title="Focus and a silent counter"></div>
+      <p class="tip"><strong>Only read refs to elements in effects or event handlers.</strong> During the first render the element doesn't exist yet, so <code>ref.current</code> is still <code>null</code>.</p>
+    </section>
+
+    <!-- 9 -->
+    <section class="lesson" id="reducer" data-title="useReducer">
+      <div class="lesson-head"><span class="lesson-num">Lesson 9</span><h2>Complex state with useReducer</h2></div>
+      <p>When state has several related parts and many ways to change, keep all the logic in one function, a <b>reducer</b>. It receives the current state and an <b>action</b> that describes what happened, and returns the new state. Components only <code>dispatch</code> actions.</p>
+      <div class="example" data-example="reducer" data-title="Shopping cart"></div>
+      <p>The reducer is a plain function with no mini-react in it, so it's easy to read and to test on its own. The same rule as <code>useState</code> applies: always return a new object when something changes.</p>
+    </section>
+
+    <!-- 10 -->
+    <section class="lesson" id="context" data-title="Context">
+      <div class="lesson-head"><span class="lesson-num">Lesson 10</span><h2>Sharing data with context</h2></div>
+      <p>Passing the same prop through many layers gets tiring. <b>Context</b> lets a component far down the tree read a value directly.</p>
+      <ol class="points">
+        <li>Create it: <code>const ThemeContext = createContext('light')</code>. The argument is the default value.</li>
+        <li>Provide a value: <code>h(ThemeContext.Provider, {'{'} value: theme {'}'}, ...children)</code>.</li>
+        <li>Read it anywhere below: <code>const theme = useContext(ThemeContext)</code>.</li>
+      </ol>
+      <div class="example" data-example="context" data-title="Theme through context"></div>
+      <p>When the provided value changes, every component that reads it re-renders, even if a component in between uses <code>memo</code> (Lesson 12).</p>
+    </section>
+
+    <!-- 11 -->
+    <section class="lesson" id="custom-hooks" data-title="Custom hooks">
+      <div class="lesson-head"><span class="lesson-num">Lesson 11</span><h2>Your own hooks</h2></div>
+      <p>A <b>custom hook</b> is a function whose name starts with <code>use</code> and that calls other hooks. It lets you reuse stateful logic between components. Each component that calls it gets its own separate state.</p>
+      <div class="example" data-example="hooks" data-title="useToggle, useInterval and useWindowWidth"></div>
+      <p><code>useInterval</code> keeps the latest callback in a ref. The interval itself only restarts when the delay changes, but it always calls the newest version of your function, with the newest state.</p>
+      <p class="tip warn"><strong>The rules of hooks.</strong> Call hooks at the top level of a component or a custom hook, in the same order on every render. Don't call them inside <code>if</code>, loops or event handlers. mini-react finds each hook's data by its position in the call order, like React does.</p>
+    </section>
+
+    <!-- 12 -->
+    <section class="lesson" id="performance" data-title="Performance">
+      <div class="lesson-head"><span class="lesson-num">Lesson 12</span><h2>Performance: memo, useMemo, useCallback</h2></div>
+      <p>When a component renders, its children render too. That's usually fast enough, because mini-react only changes the parts of the page that actually differ. For big lists or slow components, three tools help:</p>
+      <div class="table-box">
+        <table>
+          <thead><tr><th>Tool</th><th>What it does</th><th>Use it for</th></tr></thead>
+          <tbody>
+            <tr><td><code>memo(Component)</code></td><td>Skips rendering a component when its props are the same as last time (a shallow comparison).</td><td>List rows and other components that render often with the same props.</td></tr>
+            <tr><td><code>useMemo(fn, deps)</code></td><td>Remembers the result of <code>fn</code> until a dependency changes.</td><td>Slow calculations like filtering or sorting a big list.</td></tr>
+            <tr><td><code>useCallback(fn, deps)</code></td><td>Keeps the same function between renders.</td><td>Handlers you pass to <code>memo</code> components. A new function on every render would count as a changed prop.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="example" data-example="perf" data-title="memo and useCallback in a list"></div>
+      <p class="tip"><strong>Try this:</strong> type in the note field, and the log stays quiet because the rows are skipped. Then remove <code>useCallback</code> (keep the arrow function) and type again. Every row renders on each keystroke, because <code>onToggle</code> is a new function every time.</p>
+      <p><code>memo</code> takes an optional second argument, <code>areEqual(prevProps, nextProps)</code>. Return <code>true</code> to skip the render.</p>
+    </section>
+
+    <!-- 13 -->
+    <section class="lesson" id="app" data-title="A complete app">
+      <div class="lesson-head"><span class="lesson-num">Lesson 13</span><h2>Putting it together: a reading list</h2></div>
+      <p>This app uses almost everything from the tutorial:</p>
+      <ul class="points">
+        <li>A reducer for the books.</li>
+        <li>Context to hand <code>dispatch</code> to any component.</li>
+        <li>A controlled form, with a ref that puts focus back into the title field after you add a book.</li>
+        <li><code>memo</code> rows with keys.</li>
+        <li><code>useMemo</code> for the filtered list and the stats.</li>
+      </ul>
+      <p>Read it from the bottom up: <code>App</code> first, then the pieces it uses.</p>
+      <div class="example" data-example="app" data-title="Reading list"></div>
+      <p class="tip"><strong>Ideas to extend it:</strong> sort by rating, add a "delete" button, or show the average rating of the books you've read.</p>
+    </section>
+
+    <!-- 14 -->
+    <section class="lesson" id="jsx" data-title="JSX and modules">
+      <div class="lesson-head"><span class="lesson-num">Lesson 14</span><h2>JSX and ES modules</h2></div>
+      <p>Everything so far used <code>h()</code> directly, so it runs without any tools. For bigger projects you may prefer <b>JSX</b>, the HTML-like syntax React uses. JSX is turned into <code>h()</code> calls by a build tool. These two are the same:</p>
+      <pre class="code" data-lang="js"><span class="file">Without JSX</span>h('button', { className: 'primary', onClick: save }, 'Save ', count)</pre>
+      <pre class="code" data-lang="js"><span class="file">With JSX</span>&lt;button className="primary" onClick={save}&gt;Save {count}&lt;/button&gt;</pre>
+      <p>To use JSX, import from the module version, <code>mini-react.js</code>, and tell your build tool to use <code>h</code> and <code>Fragment</code>. With <a href="https://esbuild.github.io/">esbuild</a>:</p>
+      <pre class="code" data-lang="js"><span class="file">app.jsx</span>import { h, Fragment, createRoot, useState } from './mini-react.js';
+
+function App() {
+  const [name, setName] = useState('Vlad');
+  return (
+    &lt;&gt;
+      &lt;input value={name} onChange={(e) =&gt; setName(e.target.value)} /&gt;
+      &lt;p&gt;Hello, {name}!&lt;/p&gt;
+    &lt;/&gt;
+  );
+}
+
+createRoot(document.getElementById('app')).render(&lt;App /&gt;);</pre>
+      <pre class="code" data-lang="sh"><span class="file">Terminal</span>npx esbuild app.jsx --bundle --jsx-factory=h --jsx-fragment=Fragment --outfile=app.js</pre>
+      <p>Then load <code>app.js</code> with a normal script tag. In Vite, set <code>esbuild: {'{'} jsxFactory: 'h', jsxFragment: 'Fragment' {'}'}</code> in <code>vite.config.js</code>.</p>
+      <p class="tip"><strong>Modules without a build step:</strong> <code>&lt;script type="module"&gt;</code> with <code>import {'{'} h {'}'} from './mini-react.js'</code> also works, but browsers only allow modules from a web server, not from a file you double-click. Run <code>npx serve .</code> in the folder first.</p>
+    </section>
+
+    <!-- 15 -->
+    <section class="lesson" id="gotchas" data-title="Common mistakes">
+      <div class="lesson-head"><span class="lesson-num">Lesson 15</span><h2>Common mistakes</h2></div>
+      <div class="table-box">
+        <table>
+          <thead><tr><th>Problem</th><th>Why it happens</th><th>Fix</th></tr></thead>
+          <tbody>
+            <tr><td>The page doesn't update after I change state.</td><td>You changed an object or array in place, so the new state is the same object.</td><td>Create a new one: <code>[...list, item]</code>, <code>{'{'} ...obj, x: 1 {'}'}</code>.</td></tr>
+            <tr><td>The DOM still shows the old value right after <code>setState</code>.</td><td>Updates are batched and applied a moment later, together.</td><td>Read the new value in the next render or in <code>useEffect</code>. In tests, wrap the update in <code>flushSync(() =&gt; ...)</code>.</td></tr>
+            <tr><td>A counter adds 1 instead of 2.</td><td>Both calls used the same old value.</td><td><code>setCount(c =&gt; c + 1)</code>.</td></tr>
+            <tr><td>"Too many re-renders".</td><td><code>setState</code> is called during rendering, or in an effect that runs after every render.</td><td>Move it into an event handler, or give the effect a <code>deps</code> list.</td></tr>
+            <tr><td>A timer or listener keeps running after the component is gone.</td><td>The effect has no cleanup.</td><td>Return a function that clears it.</td></tr>
+            <tr><td>An interval always sees the first value of state.</td><td>The callback was created in the first render and never updated (a "stale closure").</td><td>Use the function form of the setter, or the <code>useInterval</code> hook from Lesson 11.</td></tr>
+            <tr><td>Hook data gets mixed up.</td><td>A hook was called inside an <code>if</code> or a loop, so the order changed.</td><td>Call hooks unconditionally at the top of the component.</td></tr>
+            <tr><td>List items lose their state or show the wrong data.</td><td>Missing keys, or the index is used as the key.</td><td>Use a stable id: <code>key: item.id</code>.</td></tr>
+            <tr><td>The form reloads the page.</td><td>The browser submitted the form.</td><td><code>e.preventDefault()</code> in <code>onSubmit</code>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Differences from React</h3>
+      <ul class="points">
+        <li>No class components, portals, Suspense, error boundaries or server rendering.</li>
+        <li><code>defaultValue</code>, <code>defaultChecked</code> and <code>dangerouslySetInnerHTML</code> aren't supported. Use controlled inputs, or set things through a ref.</li>
+        <li>Handlers receive the browser's own event, not a React "synthetic" event. Listeners are attached to each element.</li>
+        <li><code>useLayoutEffect</code> behaves the same as <code>useEffect</code>. Both run right after the page is updated, before the browser paints.</li>
+        <li>Rendering can't be split into smaller pieces. There is no <code>startTransition</code>, so a very large update renders in one go.</li>
+      </ul>
+    </section>
+
+    <!-- 16 -->
+    <section class="lesson" id="api" data-title="API reference">
+      <div class="lesson-head"><span class="lesson-num">Reference</span><h2>API cheat sheet</h2></div>
+      <div class="table-box">
+        <table>
+          <thead><tr><th>Function</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><code>h(type, props, ...children)</code></td><td>Describe an element. <code>type</code> is a tag name, a component or <code>Fragment</code>. Also exported as <code>createElement</code>.</td></tr>
+            <tr><td><code>Fragment</code></td><td>Group children without a wrapper element.</td></tr>
+            <tr><td><code>createRoot(el).render(ui)</code></td><td>Render into a page element. Call <code>render</code> again to update, <code>unmount()</code> to remove.</td></tr>
+            <tr><td><code>render(ui, el)</code></td><td>Short form of the line above.</td></tr>
+            <tr><td><code>useState(initial)</code></td><td><code>[value, setValue]</code>. <code>initial</code> can be a function, called only once.</td></tr>
+            <tr><td><code>useReducer(reducer, initialArg, init?)</code></td><td><code>[state, dispatch]</code>.</td></tr>
+            <tr><td><code>useEffect(fn, deps?)</code></td><td>Run <code>fn</code> after rendering when <code>deps</code> change. <code>fn</code> may return a cleanup.</td></tr>
+            <tr><td><code>useLayoutEffect(fn, deps?)</code></td><td>Same as <code>useEffect</code> in mini-react.</td></tr>
+            <tr><td><code>useRef(initial)</code></td><td>A <code>{'{'} current {'}'}</code> box that survives renders. Pass as <code>ref</code> to get an element.</td></tr>
+            <tr><td><code>useMemo(fn, deps)</code></td><td>Cache a calculated value.</td></tr>
+            <tr><td><code>useCallback(fn, deps)</code></td><td>Cache a function.</td></tr>
+            <tr><td><code>createContext(default)</code></td><td>Make a context with a <code>.Provider</code> component.</td></tr>
+            <tr><td><code>useContext(ctx)</code></td><td>Read the nearest provider's value.</td></tr>
+            <tr><td><code>memo(Component, areEqual?)</code></td><td>Skip re-rendering when props are equal.</td></tr>
+            <tr><td><code>flushSync(fn?)</code></td><td>Run <code>fn</code> and apply all pending updates immediately.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="next">
+        <h2>Where to go next</h2>
+        <p>Browse the <a href="demo.html">13 live demos</a> for more complete examples, including a drawing pad, a validated sign-up form and the Game of Life. Or read <code>mini-react.js</code> itself. It's about 700 lines, and every part is commented.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="dist/mini-react.global.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// Example code. Each one is shown in an editor and run in its result area.
+// ═══════════════════════════════════════════════════════════════════════
+const EXAMPLES = {
+
+hello: `const app = h('h1', null, 'Hello, world!');
+
+createRoot(container).render(app);`,
+
+elements: `const user = { name: 'Vlad', online: true };
+const tasks = ['Read the docs', 'Build a counter', 'Ship it'];
+
+const card = h('div', { className: 'card', style: { maxWidth: 360 } },
+  h('h3', null, 'Hello, ', user.name, '!'),
+  h('p', { className: 'muted' }, 'You have ', tasks.length, ' tasks.'),
+
+  // Shown only when the condition is true
+  user.online && h('span', { className: 'tag' }, '● online'),
+
+  // An array of elements, each with a key
+  h('ul', null, tasks.map((task) => h('li', { key: task }, task))),
+
+  h('button', { onClick: () => log('Clicked!'), disabled: tasks.length === 0 }, 'Click me'),
+);
+
+createRoot(container).render(card);`,
+
+components: `function Avatar({ name, size = 40 }) {
+  const initials = name.split(' ').map((word) => word[0]).join('');
+  return h('div', { className: 'avatar', style: { width: size, height: size, fontSize: size / 2.5 } }, initials);
+}
+
+function UserCard({ name, role, children }) {
+  return h('div', { className: 'user-card' },
+    h(Avatar, { name }),
+    h('div', null,
+      h('strong', null, name),
+      h('div', { className: 'muted' }, role),
+      children, // whatever was passed between the tags
+    ),
+  );
+}
+
+function App() {
+  return h('div', { className: 'stack' },
+    h(UserCard, { name: 'Ada Lovelace', role: 'Mathematician' }),
+    h(UserCard, { name: 'Alan Turing', role: 'Computer scientist' },
+      h('em', null, 'Children appear here.'),
+    ),
+  );
+}
+
+createRoot(container).render(h(App));`,
+
+counter: `function Counter() {
+  const [count, setCount] = useState(0);
+  log('render: count =', count);
+
+  return h('div', { className: 'row' },
+    h('button', { onClick: () => setCount(count - 1) }, '−1'),
+    h('span', { className: 'big', style: { minWidth: 70, textAlign: 'center' } }, count),
+    h('button', { onClick: () => setCount(count + 1) }, '+1'),
+    h('button', { onClick: () => {
+      setCount((c) => c + 1);
+      setCount((c) => c + 1);
+    } }, '+2'),
+    h('button', { onClick: () => setCount(0) }, 'Reset'),
+  );
+}
+
+createRoot(container).render(h(Counter));`,
+
+immutable: `function Profile() {
+  const [user, setUser] = useState({ name: 'Vlad', skills: ['HTML', 'CSS'] });
+
+  // ✓ New object, new array: mini-react sees the change
+  const addSkill = () => setUser((u) => ({
+    ...u,
+    skills: [...u.skills, 'Skill ' + (u.skills.length + 1)],
+  }));
+  const removeLast = () => setUser((u) => ({ ...u, skills: u.skills.slice(0, -1) }));
+  const rename = () => setUser((u) => ({ ...u, name: u.name === 'Vlad' ? 'Vladimir' : 'Vlad' }));
+
+  // ✗ Same object changed in place: no re-render
+  // const wrong = () => { user.skills.push('Lost skill'); setUser(user); };
+
+  return h('div', { className: 'stack' },
+    h('strong', null, user.name, ' knows ', user.skills.length, ' things:'),
+    h('ul', null, user.skills.map((s) => h('li', { key: s }, s))),
+    h('div', { className: 'row' },
+      h('button', { onClick: addSkill }, 'Add skill'),
+      h('button', { onClick: removeLast }, 'Remove last'),
+      h('button', { onClick: rename }, 'Rename'),
+      // h('button', { onClick: wrong }, 'Wrong way'),
+    ),
+  );
+}
+
+createRoot(container).render(h(Profile));`,
+
+form: `function SignupForm() {
+  const [form, setForm] = useState({ name: '', plan: 'free', newsletter: true, agree: false });
+  const [sent, setSent] = useState(null);
+
+  // One handler for every field, using the field's name
+  function update(e) {
+    const { name, type, value, checked } = e.target;
+    setForm((f) => ({ ...f, [name]: type === 'checkbox' ? checked : value }));
+  }
+
+  function onSubmit(e) {
+    e.preventDefault(); // don't reload the page
+    setSent(form);
+  }
+
+  const valid = form.name.trim().length >= 2 && form.agree;
+
+  return h('form', { className: 'stack', onSubmit },
+    h('label', null, 'Name ', h('input', { name: 'name', value: form.name, onChange: update, placeholder: 'At least 2 letters' })),
+    h('label', null, 'Plan ',
+      h('select', { name: 'plan', value: form.plan, onChange: update },
+        h('option', { value: 'free' }, 'Free'),
+        h('option', { value: 'pro' }, 'Pro'),
+      ),
+    ),
+    h('label', null, h('input', { type: 'checkbox', name: 'newsletter', checked: form.newsletter, onChange: update }), ' Send me the newsletter'),
+    h('label', null, h('input', { type: 'checkbox', name: 'agree', checked: form.agree, onChange: update }), ' I accept the terms'),
+    h('div', { className: 'row' },
+      h('button', { type: 'submit', className: 'primary', disabled: !valid }, 'Sign up'),
+      h('span', { className: 'muted' }, 'Hello, ', form.name || '…'),
+    ),
+    sent && h('pre', null, JSON.stringify(sent, null, 2)),
+  );
+}
+
+createRoot(container).render(h(SignupForm));`,
+
+todos: `let nextId = 4;
+
+function TodoApp() {
+  const [todos, setTodos] = useState([
+    { id: 1, text: 'Learn h()', done: true },
+    { id: 2, text: 'Learn useState', done: true },
+    { id: 3, text: 'Learn keys', done: false },
+  ]);
+  const [text, setText] = useState('');
+
+  function add(e) {
+    e.preventDefault();
+    if (!text.trim()) return;
+    setTodos([...todos, { id: nextId++, text: text.trim(), done: false }]);
+    setText('');
+  }
+  const toggle = (id) => setTodos(todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
+  const remove = (id) => setTodos(todos.filter((t) => t.id !== id));
+  const reverse = () => setTodos([...todos].reverse());
+
+  return h('div', { className: 'stack' },
+    h('form', { className: 'row', onSubmit: add },
+      h('input', { value: text, onChange: (e) => setText(e.target.value), placeholder: 'New task' }),
+      h('button', { type: 'submit' }, 'Add'),
+      h('button', { type: 'button', onClick: reverse }, 'Reverse'),
+    ),
+    todos.length === 0
+      ? h('p', { className: 'muted' }, 'Nothing to do. Nice!')
+      : h('ul', null, todos.map((todo) =>
+          h('li', { key: todo.id }, // ← stable id as the key
+            h('label', { className: todo.done ? 'done' : '' },
+              h('input', { type: 'checkbox', checked: todo.done, onChange: () => toggle(todo.id) }),
+              ' ', todo.text,
+            ),
+            ' ', h('button', { onClick: () => remove(todo.id), 'aria-label': 'Remove' }, '✕'),
+          ))),
+    h('span', { className: 'muted' }, todos.filter((t) => !t.done).length, ' left'),
+  );
+}
+
+createRoot(container).render(h(TodoApp));`,
+
+clock: `function Clock() {
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    log('effect: start the timer');
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => {
+      log('cleanup: stop the timer');
+      clearInterval(id);
+    };
+  }, []); // [] = run once, after the first render
+
+  return h('div', { className: 'big' }, now.toLocaleTimeString());
+}
+
+function App() {
+  const [visible, setVisible] = useState(true);
+  return h('div', { className: 'stack' },
+    h('button', { onClick: () => setVisible(!visible) }, visible ? 'Hide clock' : 'Show clock'),
+    visible && h(Clock),
+  );
+}
+
+createRoot(container).render(h(App));`,
+
+search: `const CITIES = ['Amsterdam', 'Athens', 'Barcelona', 'Berlin', 'Bologna', 'Brussels',
+  'Budapest', 'Copenhagen', 'Dublin', 'Florence', 'Lisbon', 'Ljubljana', 'London',
+  'Madrid', 'Milan', 'Munich', 'Naples', 'Oslo', 'Paris', 'Prague', 'Rome',
+  'Stockholm', 'Turin', 'Venice', 'Vienna', 'Warsaw', 'Zagreb', 'Zurich'];
+
+// Pretends to be a server: answers after 0.3–1.2 seconds
+function fakeSearch(query) {
+  const delay = 300 + Math.random() * 900;
+  const result = CITIES.filter((c) => c.toLowerCase().includes(query.toLowerCase()));
+  return new Promise((resolve) => setTimeout(() => resolve(result), delay));
+}
+
+function CitySearch() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let current = true; // becomes false when a newer search starts
+    setLoading(true);
+    fakeSearch(query).then((list) => {
+      if (!current) {
+        log('ignored old answer for "' + query + '"');
+        return;
+      }
+      setResults(list);
+      setLoading(false);
+    });
+    return () => { current = false; };
+  }, [query]); // run again whenever the query changes
+
+  return h('div', { className: 'stack' },
+    h('input', { value: query, onChange: (e) => setQuery(e.target.value), placeholder: 'Search cities' }),
+    h('span', { className: 'muted' }, loading ? 'Searching…' : results.length + ' found'),
+    h('ul', { style: { opacity: loading ? 0.5 : 1 } }, results.slice(0, 8).map((c) => h('li', { key: c }, c))),
+  );
+}
+
+createRoot(container).render(h(CitySearch));`,
+
+refs: `function FocusDemo() {
+  const inputRef = useRef(null); // will hold the <input> element
+  const clicks = useRef(0);      // a value that doesn't cause renders
+  log('render');
+
+  function focusInput() {
+    inputRef.current.focus();
+    inputRef.current.select();
+    clicks.current++;
+    log('focused', clicks.current, 'times, and no re-render');
+  }
+
+  return h('div', { className: 'row' },
+    h('input', { ref: inputRef, placeholder: 'Type something' }),
+    h('button', { onClick: focusInput }, 'Focus the input'),
+  );
+}
+
+function Measure() {
+  const boxRef = useRef(null);
+  const [width, setWidth] = useState(null);
+
+  useEffect(() => {
+    // The element exists now, so we can measure it
+    setWidth(Math.round(boxRef.current.getBoundingClientRect().width));
+  }, []);
+
+  return h('div', { ref: boxRef, className: 'card' }, 'This box is ', width ?? '…', ' px wide.');
+}
+
+createRoot(container).render(h('div', { className: 'stack' }, h(FocusDemo), h(Measure)));`,
+
+reducer: `const PRODUCTS = [
+  { id: 'tea', name: 'Green tea', price: 4.5 },
+  { id: 'mug', name: 'Mug', price: 12 },
+  { id: 'honey', name: 'Honey', price: 7.25 },
+];
+
+// All the ways the cart can change, in one place
+function cartReducer(cart, action) {
+  switch (action.type) {
+    case 'add': {
+      const qty = (cart[action.id] || 0) + 1;
+      return { ...cart, [action.id]: qty };
+    }
+    case 'remove': {
+      const qty = (cart[action.id] || 0) - 1;
+      const next = { ...cart };
+      if (qty > 0) next[action.id] = qty;
+      else delete next[action.id];
+      return next;
+    }
+    case 'clear':
+      return {};
+    default:
+      return cart;
+  }
+}
+
+function Shop() {
+  const [cart, dispatch] = useReducer(cartReducer, {});
+  const total = PRODUCTS.reduce((sum, p) => sum + (cart[p.id] || 0) * p.price, 0);
+
+  return h('div', { className: 'stack' },
+    PRODUCTS.map((p) => h('div', { key: p.id, className: 'row' },
+      h('span', { style: { width: 90 } }, p.name),
+      h('span', { className: 'muted', style: { width: 60 } }, '€' + p.price.toFixed(2)),
+      h('button', { onClick: () => dispatch({ type: 'remove', id: p.id }), disabled: !cart[p.id] }, '−'),
+      h('strong', { style: { width: 24, textAlign: 'center' } }, cart[p.id] || 0),
+      h('button', { onClick: () => dispatch({ type: 'add', id: p.id }) }, '+'),
+    )),
+    h('div', { className: 'row' },
+      h('strong', null, 'Total: €', total.toFixed(2)),
+      h('button', { onClick: () => dispatch({ type: 'clear' }), disabled: total === 0 }, 'Empty cart'),
+    ),
+  );
+}
+
+createRoot(container).render(h(Shop));`,
+
+context: `const ThemeContext = createContext('light');
+
+const THEMES = {
+  light: { background: '#ffffff', color: '#1d2730', border: '1px solid #cfd8de' },
+  dark: { background: '#1d2730', color: '#f2f5f7', border: '1px solid #1d2730' },
+};
+
+// Deep in the tree: reads the theme without any props
+function ThemedButton({ children }) {
+  const theme = useContext(ThemeContext);
+  return h('button', { style: THEMES[theme] }, children, ' (', theme, ')');
+}
+
+// This component knows nothing about the theme
+function Toolbar() {
+  return h('div', { className: 'row' },
+    h(ThemedButton, null, 'Save'),
+    h(ThemedButton, null, 'Share'),
+  );
+}
+
+function App() {
+  const [theme, setTheme] = useState('light');
+  return h('div', { className: 'stack' },
+    h('label', null,
+      h('input', { type: 'checkbox', checked: theme === 'dark', onChange: (e) => setTheme(e.target.checked ? 'dark' : 'light') }),
+      ' Dark buttons',
+    ),
+    h(ThemeContext.Provider, { value: theme }, h(Toolbar)),
+    h(ThemedButton, null, 'Outside the provider'),
+  );
+}
+
+createRoot(container).render(h(App));`,
+
+hooks: `// true/false with a function to flip it
+function useToggle(initial = false) {
+  const [on, setOn] = useState(initial);
+  const toggle = useCallback(() => setOn((v) => !v), []);
+  return [on, toggle];
+}
+
+// setInterval that always calls the latest callback. delay = null pauses it.
+function useInterval(callback, delay) {
+  const saved = useRef(callback);
+  saved.current = callback;
+  useEffect(() => {
+    if (delay == null) return;
+    const id = setInterval(() => saved.current(), delay);
+    return () => clearInterval(id);
+  }, [delay]);
+}
+
+// The window width, updated when the window is resized
+function useWindowWidth() {
+  const [width, setWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const onResize = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return width;
+}
+
+function Stopwatch() {
+  const [running, toggleRunning] = useToggle(false);
+  const [tenths, setTenths] = useState(0);
+  useInterval(() => setTenths(tenths + 1), running ? 100 : null);
+
+  return h('div', { className: 'row' },
+    h('span', { className: 'big', style: { minWidth: 110 } }, (tenths / 10).toFixed(1), 's'),
+    h('button', { className: 'primary', onClick: toggleRunning }, running ? 'Pause' : 'Start'),
+    h('button', { onClick: () => setTenths(0) }, 'Reset'),
+  );
+}
+
+function WidthBadge() {
+  const width = useWindowWidth();
+  return h('span', { className: 'tag' }, 'Window: ', width, 'px, ', width < 700 ? 'phone layout' : 'wide layout');
+}
+
+createRoot(container).render(h('div', { className: 'stack' },
+  h(Stopwatch),
+  h(Stopwatch), // a second one, with its own separate state
+  h(WidthBadge),
+));`,
+
+perf: `const Row = memo(function Row({ item, onToggle }) {
+  log('render row', item.id);
+  return h('li', null,
+    h('label', { className: item.done ? 'done' : '' },
+      h('input', { type: 'checkbox', checked: item.done, onChange: () => onToggle(item.id) }),
+      ' ', item.text,
+    ),
+  );
+});
+
+function List() {
+  const [items, setItems] = useState([
+    { id: 1, text: 'Buy milk', done: false },
+    { id: 2, text: 'Walk the dog', done: true },
+    { id: 3, text: 'Call mom', done: false },
+    { id: 4, text: 'Water plants', done: false },
+  ]);
+  const [note, setNote] = useState('');
+
+  // Same function on every render, so memo rows can skip
+  const onToggle = useCallback((id) => {
+    setItems((list) => list.map((it) => (it.id === id ? { ...it, done: !it.done } : it)));
+  }, []);
+
+  // Recalculated only when items change, not when you type a note
+  const doneCount = useMemo(() => items.filter((it) => it.done).length, [items]);
+
+  return h('div', { className: 'stack' },
+    h('input', { value: note, onChange: (e) => setNote(e.target.value), placeholder: 'Type a note…' }),
+    h('ul', null, items.map((item) => h(Row, { key: item.id, item, onToggle }))),
+    h('span', { className: 'muted' }, doneCount, ' of ', items.length, ' done'),
+  );
+}
+
+createRoot(container).render(h(List));`,
+
+app: `// ── State: every change to the books goes through this reducer ──
+let nextId = 4;
+function booksReducer(books, action) {
+  switch (action.type) {
+    case 'add':
+      return [...books, { id: nextId++, title: action.title, author: action.author, read: false, rating: 0 }];
+    case 'toggleRead':
+      return books.map((b) => (b.id === action.id ? { ...b, read: !b.read } : b));
+    case 'rate':
+      return books.map((b) => (b.id === action.id ? { ...b, rating: action.rating } : b));
+    case 'remove':
+      return books.filter((b) => b.id !== action.id);
+    default:
+      return books;
+  }
+}
+
+// ── Context: any component can dispatch without prop drilling ──
+const BooksDispatch = createContext(null);
+
+function Stars({ book }) {
+  const dispatch = useContext(BooksDispatch);
+  return h('span', { className: 'row', style: { gap: 2 } },
+    [1, 2, 3, 4, 5].map((n) => h('button', {
+      key: n,
+      'aria-label': n + ' stars',
+      style: { padding: '0 4px', border: 0, background: 'none', color: n <= book.rating ? '#e0a020' : '#9aa6af', fontSize: 18 },
+      onClick: () => dispatch({ type: 'rate', id: book.id, rating: n }),
+    }, '★')),
+  );
+}
+
+const BookRow = memo(function BookRow({ book }) {
+  const dispatch = useContext(BooksDispatch);
+  return h('li', { className: 'row', style: { justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--line)' } },
+    h('label', { className: book.read ? 'done' : '' },
+      h('input', { type: 'checkbox', checked: book.read, onChange: () => dispatch({ type: 'toggleRead', id: book.id }) }),
+      ' ', h('strong', null, book.title), h('span', { className: 'muted' }, ' · ', book.author),
+    ),
+    h('span', { className: 'row' },
+      h(Stars, { book }),
+      h('button', { onClick: () => dispatch({ type: 'remove', id: book.id }), 'aria-label': 'Remove' }, '✕'),
+    ),
+  );
+});
+
+function AddBook() {
+  const dispatch = useContext(BooksDispatch);
+  const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('');
+  const titleRef = useRef(null);
+
+  function submit(e) {
+    e.preventDefault();
+    if (!title.trim()) return;
+    dispatch({ type: 'add', title: title.trim(), author: author.trim() || 'Unknown' });
+    setTitle('');
+    setAuthor('');
+    titleRef.current.focus(); // ready for the next book
+  }
+
+  return h('form', { className: 'row', onSubmit: submit },
+    h('input', { ref: titleRef, value: title, onChange: (e) => setTitle(e.target.value), placeholder: 'Title' }),
+    h('input', { value: author, onChange: (e) => setAuthor(e.target.value), placeholder: 'Author' }),
+    h('button', { type: 'submit', className: 'primary' }, 'Add book'),
+  );
+}
+
+function App() {
+  const [books, dispatch] = useReducer(booksReducer, [
+    { id: 1, title: 'The Pragmatic Programmer', author: 'Hunt & Thomas', read: true, rating: 5 },
+    { id: 2, title: 'Eloquent JavaScript', author: 'Marijn Haverbeke', read: false, rating: 0 },
+    { id: 3, title: 'Refactoring', author: 'Martin Fowler', read: false, rating: 0 },
+  ]);
+  const [filter, setFilter] = useState('all');
+
+  const visible = useMemo(
+    () => books.filter((b) => (filter === 'all' ? true : filter === 'read' ? b.read : !b.read)),
+    [books, filter],
+  );
+  const readCount = useMemo(() => books.filter((b) => b.read).length, [books]);
+
+  return h(BooksDispatch.Provider, { value: dispatch },
+    h('div', { className: 'stack', style: { justifyItems: 'stretch' } },
+      h(AddBook),
+      h('div', { className: 'row' },
+        ['all', 'unread', 'read'].map((f) => h('button', {
+          key: f,
+          className: filter === f ? 'selected' : '',
+          onClick: () => setFilter(f),
+        }, f)),
+        h('span', { className: 'muted' }, readCount, ' of ', books.length, ' read'),
+      ),
+      visible.length
+        ? h('ul', { style: { listStyle: 'none', padding: 0 } }, visible.map((b) => h(BookRow, { key: b.id, book: b })))
+        : h('p', { className: 'muted' }, 'No books here.'),
+    ),
+  );
+}
+
+createRoot(container).render(h(App));`,
+};
+
+// ═══════════════════════════════════════════════════════════════════════
+// Page machinery: highlighting, editors, running examples, navigation
+// ═══════════════════════════════════════════════════════════════════════
+(function () {
+  'use strict';
+
+  // ── Tiny syntax highlighter ──
+  const TOKEN = /(\/\/[^\n]*|<!--[\s\S]*?-->)|('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|`(?:[^`\\]|\\.)*`)|\b(const|let|var|function|return|if|else|for|of|in|new|switch|case|default|break|import|from|export|true|false|null|undefined|typeof|delete|async|await)\b|\b(\d+(?:\.\d+)?)\b|\b(h|memo|createRoot|createContext|use[A-Z]\w*|useState|useEffect|useRef|useMemo|useReducer|useCallback|useContext|log)(?=\s*\()/g;
+  const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  function highlight(code) {
+    let out = '';
+    let last = 0;
+    code.replace(TOKEN, (match, comment, string, keyword, number, call, index) => {
+      out += escapeHtml(code.slice(last, index));
+      const cls = comment ? 't-c' : string ? 't-s' : keyword ? 't-k' : number ? 't-n' : 't-f';
+      out += `<span class="${cls}">${escapeHtml(match)}</span>`;
+      last = index + match.length;
+      return match;
+    });
+    return out + escapeHtml(code.slice(last)) + '\n';
+  }
+
+  // Static code blocks
+  document.querySelectorAll('pre.code[data-lang="js"]').forEach((pre) => {
+    const label = pre.querySelector('.file');
+    const labelHtml = label ? label.outerHTML : '';
+    if (label) label.remove();
+    pre.innerHTML = labelHtml + highlight(pre.textContent).replace(/\n$/, '');
+  });
+
+  // ── Running code ──
+  // Edited code runs with new Function(). If the page's host doesn't allow that,
+  // fall back to an injected <script>. If neither works, say so.
+  const API = window.MiniReact;
+  const NAMES = Object.keys(API);
+  const PARAMS = ['container', 'log', ...NAMES];
+  let runner = null;
+
+  function makeRunner() {
+    try {
+      new Function('return 1')();
+      return (code) => new Function(...PARAMS, '"use strict";\n' + code);
+    } catch (e) { /* not allowed, try a script element */ }
+    try {
+      window.__tutorialFn = null;
+      const probe = document.createElement('script');
+      probe.textContent = 'window.__tutorialFn = function () { return 1; };';
+      document.head.appendChild(probe).remove();
+      if (typeof window.__tutorialFn === 'function') {
+        return (code) => {
+          window.__tutorialFn = null;
+          window.__tutorialError = null;
+          const s = document.createElement('script');
+          s.textContent = `try { window.__tutorialFn = function (${PARAMS.join(', ')}) {\n"use strict";\n${code}\n}; } catch (e) { window.__tutorialError = e; }`;
+          const onError = (ev) => { window.__tutorialError = ev.error || new Error(ev.message); ev.preventDefault(); };
+          window.addEventListener('error', onError);
+          document.head.appendChild(s).remove();
+          window.removeEventListener('error', onError);
+          if (window.__tutorialError) throw window.__tutorialError;
+          return window.__tutorialFn;
+        };
+      }
+    } catch (e) { /* not allowed either */ }
+    return null;
+  }
+
+  const examples = [];
+  let lastActive = null;
+
+  function formatValue(v) {
+    if (typeof v === 'string') return v;
+    try { return JSON.stringify(v); } catch (e) { return String(v); }
+  }
+
+  function setupExample(host) {
+    const id = host.dataset.example;
+    const original = EXAMPLES[id].trim();
+    host.innerHTML = `
+      <div class="ex-bar">
+        <span class="ex-title">${escapeHtml(host.dataset.title || id)}<span class="edited" hidden>· edited</span></span>
+        <span class="ex-actions">
+          <button type="button" class="reset">Reset</button>
+          <button type="button" class="run">Run ▶</button>
+        </span>
+      </div>
+      <div class="editor"><pre aria-hidden="true"></pre><textarea spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code for ${escapeHtml(host.dataset.title || id)}"></textarea></div>
+      <div class="ex-out">
+        <span class="ex-label">Result</span>
+        <div class="ex-error" hidden></div>
+        <div class="preview"></div>
+        <div class="ex-log" hidden></div>
+      </div>`;
+    const ex = {
+      id, host, original,
+      textarea: host.querySelector('textarea'),
+      pre: host.querySelector('.editor pre'),
+      preview: host.querySelector('.preview'),
+      errorBox: host.querySelector('.ex-error'),
+      logBox: host.querySelector('.ex-log'),
+      edited: host.querySelector('.edited'),
+      roots: [],
+      logCount: 0,
+    };
+    ex.textarea.id = 'code-' + id;
+    ex.textarea.value = original;
+    ex.textarea.rows = original.split('\n').length;
+
+    const sync = () => {
+      ex.pre.innerHTML = highlight(ex.textarea.value);
+      ex.edited.hidden = ex.textarea.value.trim() === original;
+    };
+    ex.textarea.addEventListener('input', sync);
+    ex.textarea.addEventListener('scroll', () => { ex.pre.scrollLeft = ex.textarea.scrollLeft; });
+    ex.textarea.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        run(ex);
+      } else if (e.key === 'Tab' && !e.shiftKey && !e.altKey) {
+        // Insert two spaces. (Press Esc first, then Tab, to leave the editor with the keyboard.)
+        if (ex.escaped) { ex.escaped = false; return; }
+        e.preventDefault();
+        const { selectionStart: a, selectionEnd: b, value } = ex.textarea;
+        ex.textarea.value = value.slice(0, a) + '  ' + value.slice(b);
+        ex.textarea.selectionStart = ex.textarea.selectionEnd = a + 2;
+        sync();
+      } else if (e.key === 'Escape') {
+        ex.escaped = true;
+      }
+    });
+    host.querySelector('.run').addEventListener('click', () => run(ex));
+    host.querySelector('.reset').addEventListener('click', () => {
+      ex.textarea.value = original;
+      sync();
+      run(ex);
+    });
+    host.addEventListener('pointerdown', () => { lastActive = ex; });
+    host.addEventListener('keydown', () => { lastActive = ex; });
+    sync();
+    examples.push(ex);
+    return ex;
+  }
+
+  function showError(ex, err) {
+    ex.errorBox.hidden = false;
+    const message = (err && err.message ? err.message : String(err)).replace(/^Failed to execute '\w+' on '\w+': /, '');
+    ex.errorBox.textContent = (err && err.name ? err.name + ': ' : '') + message;
+  }
+
+  function run(ex) {
+    // Clean up the previous run: unmount roots so timers and listeners stop.
+    for (const root of ex.roots) { try { root.unmount(); } catch (e) { /* ignore */ } }
+    ex.roots = [];
+    ex.preview.textContent = '';
+    ex.errorBox.hidden = true;
+    ex.logBox.hidden = true;
+    ex.logBox.textContent = '';
+    ex.logCount = 0;
+
+    const api = Object.assign({}, API, {
+      createRoot(el) {
+        const root = API.createRoot(el);
+        ex.roots.push(root);
+        return root;
+      },
+      render(element, el) {
+        const root = api.createRoot(el);
+        root.render(element);
+      },
+    });
+    const log = (...args) => {
+      ex.logBox.hidden = false;
+      const line = document.createElement('div');
+      line.innerHTML = `<span class="n">${++ex.logCount}</span>`;
+      line.append(args.map(formatValue).join(' '));
+      ex.logBox.append(line);
+      ex.logBox.scrollTop = ex.logBox.scrollHeight;
+    };
+
+    if (!runner) {
+      ex.preview.innerHTML = '<p class="muted">This page can\'t run code here, because its host blocks it. Download the project and open <code>tutorial.html</code> to run and edit the examples.</p>';
+      return;
+    }
+    lastActive = ex;
+    try {
+      const fn = runner(ex.textarea.value);
+      fn(ex.preview, log, ...NAMES.map((n) => api[n]));
+    } catch (err) {
+      showError(ex, err);
+    }
+  }
+
+  // Errors that happen later (in a click handler or a re-render) go to the example you last used.
+  window.addEventListener('error', (e) => {
+    if (lastActive && e.error) showError(lastActive, e.error);
+  });
+
+  runner = makeRunner();
+  document.querySelectorAll('.example[data-example]').forEach((host) => run(setupExample(host)));
+  lastActive = null;
+
+  // ── Table of contents with the current lesson highlighted ──
+  const toc = document.getElementById('toc');
+  const sections = [...document.querySelectorAll('.lesson')];
+  sections.forEach((section, i) => {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = '#' + section.id;
+    const n = document.createElement('span');
+    n.className = 'n';
+    n.textContent = i < sections.length - 1 ? String(i + 1) : '∗';
+    a.append(n, section.dataset.title);
+    li.append(a);
+    toc.append(li);
+  });
+  const links = [...toc.querySelectorAll('a')];
+  function markCurrent() {
+    let current = 0;
+    sections.forEach((s, i) => { if (s.getBoundingClientRect().top < 140) current = i; });
+    links.forEach((a, i) => a.classList.toggle('current', i === current));
+  }
+  window.addEventListener('scroll', markCurrent, { passive: true });
+  markCurrent();
+
+  // Expose for testing
+  window.__tutorial = { examples, run };
+})();
+</script>
+
+</html>

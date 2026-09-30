@@ -1,0 +1,5 @@
+* text=auto eol=lf
+
+# Generated files: collapsed in GitHub diffs and left out of language stats
+dist/** linguist-generated=true
+package-lock.json linguist-generated=true

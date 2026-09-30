@@ -1,0 +1,1064 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mini-react Playground</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --bg: #f3f6f7;
+    --surface: #ffffff;
+    --ink: #15212b;
+    --muted: #5a6a77;
+    --line: #d9e1e6;
+    --accent: #0c7a84;
+    --accent-soft: #e1f1f2;
+    --done: #8a97a1;
+    --danger: #b3412e;
+    --ok: #2f7d3b;
+    --warn: #a86a00;
+    --overlay: rgba(12, 20, 26, .45);
+    --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0e1418;
+      --surface: #161e24;
+      --ink: #e4ecf1;
+      --muted: #93a3af;
+      --line: #28343c;
+      --accent: #3fc1cb;
+      --accent-soft: #173238;
+      --done: #6d7b86;
+      --danger: #e27a66;
+      --ok: #6cc47a;
+      --warn: #e0a63c;
+      --overlay: rgba(0, 0, 0, .6);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0e1418;
+    --surface: #161e24;
+    --ink: #e4ecf1;
+    --muted: #93a3af;
+    --line: #28343c;
+    --accent: #3fc1cb;
+    --accent-soft: #173238;
+    --done: #6d7b86;
+    --danger: #e27a66;
+    --ok: #6cc47a;
+    --warn: #e0a63c;
+    --overlay: rgba(0, 0, 0, .6);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.55 var(--sans);
+    padding: 0 16px;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding-block: 40px 56px; }
+
+  header { display: grid; gap: 10px; margin-bottom: 20px; max-width: 68ch; }
+  .eyebrow {
+    font: 600 12px/1 var(--mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  h1 { font-size: clamp(28px, 4.2vw, 40px); line-height: 1.1; margin: 0; letter-spacing: -.02em; text-wrap: balance; }
+  header p { margin: 0; color: var(--muted); }
+  code, .mono { font-family: var(--mono); font-size: .88em; }
+  header code, .note code { background: var(--accent-soft); color: var(--ink); padding: 1px 5px; border-radius: 4px; }
+
+  .toc { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .toc a {
+    font: 500 13px/1 var(--sans);
+    color: var(--ink);
+    text-decoration: none;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    border-radius: 999px;
+    padding: 7px 12px;
+  }
+  .toc a:hover { border-color: var(--accent); color: var(--accent); }
+  .toc a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .demo-section { padding-top: 28px; display: grid; gap: 14px; scroll-margin-top: 8px; }
+  .section-head { display: grid; gap: 4px; max-width: 68ch; }
+  .section-head h2 { margin: 0; font-size: 22px; letter-spacing: -.01em; }
+  .section-head p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px;
+    display: grid;
+    gap: 14px;
+    align-content: start;
+    min-width: 0;
+  }
+  .panel.wide { grid-column: 1 / -1; }
+  .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .panel h3 { margin: 0; font-size: 17px; font-weight: 600; }
+  .panel .hooks { font: 12px/1.4 var(--mono); color: var(--muted); }
+  .note { margin: 0; font-size: 13.5px; color: var(--muted); }
+
+  .renders {
+    font: 12px/1 var(--mono);
+    color: var(--muted);
+    border: 1px dashed var(--line);
+    border-radius: 999px;
+    padding: 5px 9px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  button, input[type="text"], input[type="email"], input[type="password"], input[type="search"], select, textarea {
+    font: inherit;
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 7px 12px;
+  }
+  textarea { resize: vertical; min-height: 64px; width: 100%; }
+  button { cursor: pointer; font-weight: 500; }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+  button.primary:hover:not(:disabled) { filter: brightness(1.08); }
+  button.danger { background: var(--danger); border-color: var(--danger); color: var(--surface); }
+  :is(button, input, select, textarea, canvas, [tabindex]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  input[type="range"] { accent-color: var(--accent); }
+  input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
+
+  .big { font: 600 48px/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -.03em; }
+
+  /* Context */
+  .kv { display: grid; grid-template-columns: 9ch 1fr; gap: 8px; font-size: 14px; margin: 0; }
+  .kv dt { color: var(--muted); font: 12px/1.9 var(--mono); text-transform: uppercase; letter-spacing: .06em; }
+  .kv dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+  /* Todos */
+  .todo-form { display: flex; gap: 8px; }
+  .todo-form input { flex: 1; min-width: 0; }
+  .todos { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .todo {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+  }
+  .todo.done .label { color: var(--done); text-decoration: line-through; }
+  .todo .label { overflow-wrap: anywhere; }
+  .todo input[type="text"] { min-width: 0; }
+  .id { font: 11px/1 var(--mono); color: var(--muted); }
+  .todo button { padding: 3px 8px; font-size: 13px; }
+  .todo button.remove:hover { border-color: var(--danger); color: var(--danger); }
+  .seg { display: flex; gap: 4px; }
+  .seg button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+  .todo-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+
+  /* Keys */
+  .keys-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 560px) { .keys-cols { grid-template-columns: 1fr; } }
+  .keys-col { display: grid; gap: 8px; align-content: start; }
+  .keys-col h4 { margin: 0; font: 600 13px/1.3 var(--mono); }
+  .keys-col h4 .tag { font-weight: 400; color: var(--muted); }
+  .klist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .krow { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 7px; }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; }
+
+  /* Search */
+  .results { list-style: none; margin: 0; padding: 0; max-height: 236px; overflow-y: auto; border: 1px solid var(--line); border-radius: 7px; }
+  .results li { display: flex; justify-content: space-between; gap: 12px; padding: 7px 12px; border-bottom: 1px solid var(--line); }
+  .results li:last-child { border-bottom: 0; }
+  .results .year { font: 12px/1.8 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+  mark { background: var(--accent-soft); color: var(--ink); border-radius: 3px; padding: 0 1px; box-shadow: inset 0 -2px 0 var(--accent); }
+  .stats { display: flex; gap: 14px; flex-wrap: wrap; font: 12px/1.4 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .stats b { color: var(--ink); font-weight: 600; }
+  .search-box { display: flex; gap: 8px; align-items: center; }
+  .search-box input { flex: 1; min-width: 0; }
+  .pending { font: 12px/1 var(--mono); color: var(--warn); white-space: nowrap; }
+
+  /* Tic-tac-toe */
+  .ttt-wrap { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; }
+  .board { display: grid; grid-template-columns: repeat(3, 64px); grid-template-rows: repeat(3, 64px); gap: 6px; }
+  .square { font: 600 28px/1 var(--mono); padding: 0; border-radius: 8px; }
+  .square.x { color: var(--accent); }
+  .square.win { background: var(--accent-soft); border-color: var(--accent); }
+  .moves { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; max-height: 210px; overflow-y: auto; }
+  .moves button { padding: 3px 9px; font-size: 13px; width: 100%; text-align: left; }
+  .moves button[aria-current="step"] { background: var(--accent-soft); border-color: var(--accent); font-weight: 600; }
+  .status { font-weight: 600; }
+
+  /* Tabs + dialog */
+  .tablist { display: flex; gap: 2px; border-bottom: 1px solid var(--line); }
+  .tablist button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 8px 12px; color: var(--muted); }
+  .tablist button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  .tabpanel { padding-top: 12px; font-size: 14px; }
+  .tabpanel p { margin: 0; }
+  .overlay { position: fixed; inset: 0; background: var(--overlay); display: grid; place-items: center; padding: 16px; z-index: 20; }
+  .dialog { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; width: 100%; max-width: 380px; display: grid; gap: 12px; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
+  .dialog h4 { margin: 0; font-size: 17px; }
+  .dialog p { margin: 0; color: var(--muted); font-size: 14px; }
+  .dialog .row { justify-content: flex-end; }
+
+  /* Form */
+  .form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+  @media (max-width: 640px) { .form { grid-template-columns: 1fr; } }
+  .field { display: grid; gap: 5px; align-content: start; }
+  .field.full, .form-actions { grid-column: 1 / -1; }
+  .field > label, .field > .label { font-size: 13px; font-weight: 600; }
+  .field input[type="text"], .field input[type="email"], .field input[type="password"], .field select { width: 100%; }
+  .field .hint { font-size: 12px; color: var(--muted); }
+  .field .error { font-size: 12.5px; color: var(--danger); margin: 0; }
+  .field.invalid :is(input[type="text"], input[type="email"], input[type="password"], textarea) { border-color: var(--danger); }
+  .choice { display: flex; gap: 14px; flex-wrap: wrap; font-size: 14px; }
+  .choice label { display: flex; gap: 6px; align-items: center; }
+  .meter { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .meter span { height: 5px; border-radius: 3px; background: var(--line); }
+  .meter[data-level="1"] span:nth-child(-n+1) { background: var(--danger); }
+  .meter[data-level="2"] span:nth-child(-n+2) { background: var(--warn); }
+  .meter[data-level="3"] span:nth-child(-n+3) { background: var(--accent); }
+  .meter[data-level="4"] span:nth-child(-n+4) { background: var(--ok); }
+  .counter-hint { display: flex; justify-content: space-between; }
+  .counter-hint .over { color: var(--danger); font-weight: 600; }
+  .result { margin: 0; padding: 12px; border-radius: 7px; background: var(--accent-soft); font: 12.5px/1.6 var(--mono); overflow-x: auto; }
+  .success { color: var(--ok); font-weight: 600; margin: 0; }
+
+  /* Data loading */
+  .table-box { overflow-x: auto; border: 1px solid var(--line); border-radius: 7px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 7px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { font: 600 11px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  tbody tr:last-child td { border-bottom: 0; }
+  .stale { opacity: .45; }
+  .state-pill { font: 12px/1 var(--mono); padding: 5px 9px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+  .state-pill.loading { color: var(--warn); }
+  .state-pill.done { color: var(--ok); }
+  .state-pill.error { color: var(--danger); }
+  .error-box { border: 1px solid var(--danger); color: var(--danger); border-radius: 7px; padding: 10px 12px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .toggle { display: flex; gap: 6px; align-items: center; font-size: 13.5px; color: var(--muted); }
+
+  /* Drawing pad */
+  .pad { display: block; width: 100%; height: 230px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); touch-action: none; cursor: crosshair; }
+  .swatches { display: flex; gap: 6px; }
+  .swatches button { width: 26px; height: 26px; padding: 0; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--line); }
+  .swatches button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ink); }
+  .range { display: flex; gap: 8px; align-items: center; font: 12px/1 var(--mono); color: var(--muted); }
+
+  /* Chart */
+  .chart-box { overflow-x: auto; }
+  .chart { display: block; width: 100%; height: auto; min-width: 280px; }
+  .chart .axis { stroke: var(--line); }
+  .chart .tick { fill: var(--muted); font: 11px var(--mono); }
+  .chart .bar { fill: var(--accent); }
+  .chart .bar.max { fill: var(--ink); }
+  .chart .val { fill: var(--ink); font: 600 11px var(--mono); }
+
+  /* Game of Life */
+  .life { display: grid; grid-template-columns: repeat(var(--cols), 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; cursor: pointer; }
+  .cell { aspect-ratio: 1; background: var(--surface); }
+  .cell.on { background: var(--accent); }
+  .life-bar { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+  footer { margin-top: 32px; font-size: 13px; color: var(--muted); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .chart .bar { transition: y .35s ease, height .35s ease; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">mini-react · one file · 3.5 KB gzipped · no dependencies</span>
+    <h1>A React-style library, built from scratch</h1>
+    <p>Every panel below is rendered by <code>mini-react.js</code>. It uses the same ideas as React: a virtual DOM with keyed diffing, function components, hooks, context and batched updates.</p>
+  </header>
+  <nav class="toc" aria-label="Demo sections">
+    <a href="#basics">Basics</a>
+    <a href="#lists">Lists and keys</a>
+    <a href="#state">State and data</a>
+    <a href="#graphics">Graphics and refs</a>
+    <a href="#performance">Performance</a>
+    <a href="tutorial.html">Tutorial →</a>
+    <a href="bench.html">Benchmark vs. React →</a>
+  </nav>
+  <div id="app"></div>
+  <footer>Written without JSX, using <code>h(type, props, ...children)</code>. With a build step, the same code works as JSX.</footer>
+</div>
+
+<!-- A classic script (not a module), so this page also works when opened straight from disk. -->
+<script src="dist/mini-react.global.js"></script>
+<script>
+  const {
+    h, Fragment, createRoot, createContext, useContext,
+    useState, useEffect, useLayoutEffect, useRef, useMemo, useReducer, useCallback, memo,
+  } = window.MiniReact;
+
+  // ─────────────────────────────────────────────────────────
+  // Shared helpers
+  // ─────────────────────────────────────────────────────────
+
+  // Shows how many times a component rendered.
+  function useRenderCount() {
+    const count = useRef(0);
+    count.current++;
+    return count.current;
+  }
+  const Renders = ({ n }) => h('span', { className: 'renders', title: 'How many times this component has rendered' }, `renders: ${n}`);
+
+  function Panel({ title, hooks, renders, wide, children }) {
+    return h('section', { className: wide ? 'panel wide' : 'panel' },
+      h('div', { className: 'panel-head' },
+        h('div', null, h('h3', null, title), h('div', { className: 'hooks' }, hooks)),
+        renders != null && h(Renders, { n: renders })),
+      children);
+  }
+
+  function Section({ id, title, intro, children }) {
+    return h('section', { className: 'demo-section', id },
+      h('div', { className: 'section-head' }, h('h2', null, title), h('p', null, intro)),
+      h('div', { className: 'grid' }, children));
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // Basics
+  // ─────────────────────────────────────────────────────────
+
+  function Counter() {
+    const renders = useRenderCount();
+    const [count, setCount] = useState(0);
+    return h(Panel, { title: 'Counter', hooks: 'useState', renders },
+      h('div', { className: 'big' }, count),
+      h('div', { className: 'row' },
+        h('button', { onClick: () => setCount((c) => c - 1) }, '−1'),
+        h('button', { className: 'primary', onClick: () => setCount((c) => c + 1) }, '+1'),
+        h('button', { onClick: () => { setCount((c) => c + 1); setCount((c) => c + 1); } }, '+1 twice'),
+        h('button', { onClick: () => setCount(0) }, 'Reset')),
+      h('p', { className: 'note' }, '"+1 twice" calls setState twice but renders once. Updates in the same tick are batched.'));
+  }
+
+  function Stopwatch() {
+    const renders = useRenderCount();
+    const [running, setRunning] = useState(false);
+    const [ms, setMs] = useState(0);
+    useEffect(() => {
+      if (!running) return;
+      const start = Date.now() - ms;
+      const id = setInterval(() => setMs(Date.now() - start), 47);
+      return () => clearInterval(id); // cleanup when stopped or unmounted
+    }, [running]);
+    const s = (ms / 1000).toFixed(2).padStart(5, '0');
+    return h(Panel, { title: 'Stopwatch', hooks: 'useEffect · cleanup', renders },
+      h('div', { className: 'big' }, s, h('span', { style: { fontSize: 20, color: 'var(--muted)' } }, ' s')),
+      h('div', { className: 'row' },
+        h('button', { className: 'primary', onClick: () => setRunning((r) => !r) }, running ? 'Stop' : 'Start'),
+        h('button', { onClick: () => { setRunning(false); setMs(0); } }, 'Reset')),
+      h('p', { className: 'note' }, 'The effect starts an interval. Its cleanup function clears it when you press Stop.'));
+  }
+
+  // Context: a locale shared by deep children
+  const LocaleContext = createContext('en-US');
+  const LOCALES = { 'en-US': 'USD', 'it-IT': 'EUR', 'de-DE': 'EUR', 'ja-JP': 'JPY' };
+
+  function Price({ amount }) {
+    const locale = useContext(LocaleContext);
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: LOCALES[locale] }).format(amount);
+  }
+  function Today() {
+    const locale = useContext(LocaleContext);
+    return new Intl.DateTimeFormat(locale, { dateStyle: 'full' }).format(new Date());
+  }
+  function BigNumber() {
+    const locale = useContext(LocaleContext);
+    return new Intl.NumberFormat(locale).format(1234567.891);
+  }
+  // This component does not know about the locale. The value passes through it.
+  function LocaleCard() {
+    return h('dl', { className: 'kv' },
+      h('dt', null, 'Date'), h('dd', null, h(Today)),
+      h('dt', null, 'Price'), h('dd', null, h(Price, { amount: 1499.9 })),
+      h('dt', null, 'Number'), h('dd', null, h(BigNumber)));
+  }
+
+  function LocaleDemo() {
+    const renders = useRenderCount();
+    const [locale, setLocale] = useState('it-IT');
+    return h(Panel, { title: 'Context', hooks: 'createContext · useContext', renders },
+      h('div', { className: 'row' },
+        h('label', { htmlFor: 'locale-select', className: 'note' }, 'Locale'),
+        h('select', { id: 'locale-select', value: locale, onChange: (e) => setLocale(e.target.value) },
+          Object.keys(LOCALES).map((l) => h('option', { key: l, value: l }, l)))),
+      h(LocaleContext.Provider, { value: locale }, h(LocaleCard)),
+      h('p', { className: 'note' }, 'Three nested components read the locale from context. No props are passed down.'));
+  }
+
+  // Composition: Tabs reads its children's props. Dialog uses a ref and a window listener.
+  const Tab = () => null; // Only holds props (label, children) for <Tabs>.
+
+  function Tabs({ children }) {
+    const tabs = [].concat(children).filter(Boolean);
+    const [active, setActive] = useState(0);
+    return h('div', null,
+      h('div', { className: 'tablist', role: 'tablist' },
+        tabs.map((tab, i) => h('button', {
+          key: tab.props.label,
+          role: 'tab',
+          id: `tab-${i}`,
+          'aria-selected': String(i === active),
+          onClick: () => setActive(i),
+        }, tab.props.label))),
+      h('div', { className: 'tabpanel', role: 'tabpanel', 'aria-labelledby': `tab-${active}` }, tabs[active].props.children));
+  }
+
+  function Dialog({ title, onClose, children }) {
+    const closeRef = useRef(null);
+    useEffect(() => {
+      const previous = document.activeElement;
+      closeRef.current.focus();
+      const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+      window.addEventListener('keydown', onKey);
+      return () => {
+        window.removeEventListener('keydown', onKey);
+        if (previous && previous.focus) previous.focus(); // give focus back to the opener
+      };
+    }, []);
+    return h('div', { className: 'overlay', onClick: (e) => e.target === e.currentTarget && onClose() },
+      h('div', { className: 'dialog', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'dialog-title' },
+        h('h4', { id: 'dialog-title' }, title),
+        children(closeRef)));
+  }
+
+  function CompositionDemo() {
+    const [open, setOpen] = useState(false);
+    const [answer, setAnswer] = useState(null);
+    const close = (value) => { setOpen(false); if (value) setAnswer(value); };
+    return h(Panel, { title: 'Tabs and dialog', hooks: 'children · useRef · window events' },
+      h(Tabs, null,
+        h(Tab, { label: 'Elements' }, h('p', null, 'h() returns plain objects like { type, props, key }. They describe the UI and never touch the page.')),
+        h(Tab, { label: 'Diff' }, h('p', null, 'Each render is compared with the previous one. Only the differences are written to the page.')),
+        h(Tab, { label: 'Hooks' }, h('p', null, 'Hooks are stored in a list on each component and read back in call order. That is why they can\'t go inside an if.'))),
+      h('div', { className: 'row' },
+        h('button', { className: 'primary', onClick: () => setOpen(true) }, 'Delete draft…'),
+        answer && h('span', { className: 'note' }, answer)),
+      open && h(Dialog, { title: 'Delete this draft?', onClose: () => close() }, (closeRef) => h(Fragment, null,
+        h('p', null, 'The draft "Q4 roadmap" will be removed. You can\'t undo this.'),
+        h('div', { className: 'row' },
+          h('button', { ref: closeRef, onClick: () => close('Kept the draft.') }, 'Keep draft'),
+          h('button', { className: 'danger', onClick: () => close('Draft deleted.') }, 'Delete')))),
+      h('p', { className: 'note' }, '<Tabs> reads the label of each child. The dialog moves focus to "Keep draft" and closes with Escape or a click outside.'));
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // Lists and keys
+  // ─────────────────────────────────────────────────────────
+
+  let nextTodoId = 4;
+  function todosReducer(todos, action) {
+    switch (action.type) {
+      case 'add': return [...todos, { id: nextTodoId++, text: action.text, done: false }];
+      case 'toggle': return todos.map((t) => (t.id === action.id ? { ...t, done: !t.done } : t));
+      case 'remove': return todos.filter((t) => t.id !== action.id);
+      case 'shuffle': return [...todos].sort(() => Math.random() - 0.5);
+      case 'clear': return todos.filter((t) => !t.done);
+      default: return todos;
+    }
+  }
+
+  // memo(): an item only re-renders when its own todo changes, or for its own state.
+  const TodoItem = memo(function TodoItem({ todo, dispatch }) {
+    const renders = useRenderCount();
+    // Each item has its own state. Keys keep it attached to the right item when the list is shuffled.
+    const [editing, setEditing] = useState(false);
+    const [draft, setDraft] = useState(todo.text);
+    return h('li', { className: todo.done ? 'todo done' : 'todo' },
+      h('input', { type: 'checkbox', checked: todo.done, onChange: () => dispatch({ type: 'toggle', id: todo.id }), 'aria-label': 'Done', id: `todo-check-${todo.id}` }),
+      editing
+        ? h('input', { type: 'text', value: draft, onChange: (e) => setDraft(e.target.value), 'aria-label': 'Edit task', id: `todo-edit-${todo.id}` })
+        : h('span', { className: 'label' }, todo.text, ' ', h('span', { className: 'id' }, `#${todo.id} · renders: ${renders}`)),
+      h('button', { onClick: () => setEditing((x) => !x) }, editing ? 'Close' : 'Edit'),
+      h('button', { className: 'remove', onClick: () => dispatch({ type: 'remove', id: todo.id }), 'aria-label': `Remove ${todo.text}` }, '✕'));
+  });
+
+  function Todos() {
+    const renders = useRenderCount();
+    const [todos, dispatch] = useReducer(todosReducer, [
+      { id: 1, text: 'Write createElement', done: true },
+      { id: 2, text: 'Diff children by key', done: true },
+      { id: 3, text: 'Add hooks and batching', done: false },
+    ]);
+    const [text, setText] = useState('');
+    const [filter, setFilter] = useState('all');
+    const visible = useMemo(() => todos.filter((t) =>
+      filter === 'all' ? true : filter === 'done' ? t.done : !t.done), [todos, filter]);
+    const left = todos.filter((t) => !t.done).length;
+
+    const onSubmit = (e) => {
+      e.preventDefault();
+      if (!text.trim()) return;
+      dispatch({ type: 'add', text: text.trim() });
+      setText('');
+    };
+
+    return h(Panel, { title: 'Todo list', hooks: 'useReducer · useMemo · memo · keys', renders, wide: true },
+      h('form', { className: 'todo-form', onSubmit },
+        h('input', { type: 'text', id: 'todo-new', placeholder: 'Add a task and press Enter', value: text, onChange: (e) => setText(e.target.value) }),
+        h('button', { className: 'primary', type: 'submit' }, 'Add')),
+      visible.length
+        ? h('ul', { className: 'todos' }, visible.map((todo) => h(TodoItem, { key: todo.id, todo, dispatch })))
+        : h('p', { className: 'note' }, 'Nothing here.'),
+      h('div', { className: 'todo-foot' },
+        h('span', null, `${left} left of ${todos.length}`),
+        h('div', { className: 'seg', role: 'group', 'aria-label': 'Filter' },
+          ['all', 'active', 'done'].map((f) =>
+            h('button', { key: f, 'aria-pressed': String(filter === f), onClick: () => setFilter(f) }, f))),
+        h('div', { className: 'row' },
+          h('button', { onClick: () => dispatch({ type: 'shuffle' }) }, 'Shuffle'),
+          h('button', { onClick: () => dispatch({ type: 'clear' }) }, 'Clear done'))),
+      h('p', { className: 'note' }, 'Open "Edit" on an item, type something, then press Shuffle. The draft moves with its item, because each item is matched by its key and keeps its state. Items use memo(): typing in "Add a task" re-renders the list, but each item\'s render count only goes up when that item changes.'));
+  }
+
+  // Keys vs. index: the same list rendered twice
+  const FRUITS = ['Fig', 'Grape', 'Kiwi', 'Lemon', 'Mango', 'Orange', 'Peach', 'Plum'];
+  const mountCount = { keyed: 0, index: 0 };
+
+  function FruitRow({ label, column }) {
+    // State created once, when this component mounts.
+    const [meta] = useState(() => {
+      const n = ++mountCount[column];
+      return { n, hue: (n * 67 + 20) % 360 };
+    });
+    return h('li', { className: 'krow' },
+      h('span', { className: 'swatch', style: { background: `hsl(${meta.hue} 62% 52%)` } }),
+      h('span', null, label),
+      h('span', { className: 'id' }, `mounted #${meta.n}`));
+  }
+
+  function KeysDemo() {
+    const [items, setItems] = useState(['Apple', 'Banana', 'Cherry']);
+    const next = FRUITS.find((f) => !items.includes(f));
+    return h(Panel, { title: 'Why keys matter', hooks: 'key' },
+      h('div', { className: 'row' },
+        h('button', { className: 'primary', disabled: !next, onClick: () => setItems((list) => [next, ...list]) }, next ? `Add "${next}" to the top` : 'No more fruit'),
+        h('button', { onClick: () => setItems((list) => list.slice(1)) , disabled: items.length === 0 }, 'Remove first')),
+      h('div', { className: 'keys-cols' },
+        h('div', { className: 'keys-col' },
+          h('h4', null, 'key={fruit} ', h('span', { className: 'tag' }, '· correct')),
+          h('ul', { className: 'klist' }, items.map((f) => h(FruitRow, { key: f, label: f, column: 'keyed' })))),
+        h('div', { className: 'keys-col' },
+          h('h4', null, 'no key ', h('span', { className: 'tag' }, '· matched by position')),
+          h('ul', { className: 'klist' }, items.map((f) => h(FruitRow, { label: f, column: 'index' }))))),
+      h('p', { className: 'note' }, 'Each row picks a color when it mounts. Add a fruit: on the left, only the new row mounts and colors stay with their fruit. On the right, rows are matched by position, so the colors stay in place and the labels shift under them.'));
+  }
+
+  // Custom hook: debounced search
+  function useDebounced(value, delay) {
+    const [debounced, setDebounced] = useState(value);
+    useEffect(() => {
+      const id = setTimeout(() => setDebounced(value), delay);
+      return () => clearTimeout(id);
+    }, [value, delay]);
+    return debounced;
+  }
+
+  const LANGUAGES = [
+    ['Fortran', 1957], ['Lisp', 1958], ['COBOL', 1959], ['BASIC', 1964], ['Pascal', 1970],
+    ['C', 1972], ['Smalltalk', 1972], ['Prolog', 1972], ['SQL', 1974], ['Ada', 1980],
+    ['C++', 1985], ['Erlang', 1986], ['Perl', 1987], ['Haskell', 1990], ['Python', 1991],
+    ['Lua', 1993], ['R', 1993], ['Ruby', 1995], ['Java', 1995], ['JavaScript', 1995],
+    ['PHP', 1995], ['OCaml', 1996], ['C#', 2000], ['Scala', 2004], ['Go', 2009],
+    ['Rust', 2010], ['Kotlin', 2011], ['Elixir', 2012], ['TypeScript', 2012], ['Swift', 2014], ['Zig', 2016],
+  ];
+
+  function Highlight({ text, query }) {
+    const i = query ? text.toLowerCase().indexOf(query.toLowerCase()) : -1;
+    if (i < 0) return text;
+    return h(Fragment, null, text.slice(0, i), h('mark', null, text.slice(i, i + query.length)), text.slice(i + query.length));
+  }
+
+  function SearchDemo() {
+    const [query, setQuery] = useState('');
+    const debounced = useDebounced(query.trim(), 300);
+    const keystrokes = useRef(0);
+    const searches = useRef(0);
+    const results = useMemo(() => {
+      searches.current++;
+      const q = debounced.toLowerCase();
+      return LANGUAGES.filter(([name]) => name.toLowerCase().includes(q));
+    }, [debounced]);
+    return h(Panel, { title: 'Debounced search', hooks: 'custom hook · useDebounced' },
+      h('div', { className: 'search-box' },
+        h('input', {
+          type: 'search', id: 'lang-search', placeholder: 'Search languages, e.g. "script"', value: query,
+          'aria-label': 'Search programming languages',
+          onChange: (e) => { keystrokes.current++; setQuery(e.target.value); },
+        }),
+        query.trim() !== debounced && h('span', { className: 'pending' }, 'waiting…')),
+      h('div', { className: 'stats' },
+        h('span', null, 'keystrokes ', h('b', null, keystrokes.current)),
+        h('span', null, 'searches run ', h('b', null, searches.current)),
+        h('span', null, 'matches ', h('b', null, results.length))),
+      results.length
+        ? h('ul', { className: 'results' }, results.map(([name, year]) =>
+            h('li', { key: name }, h('span', null, h(Highlight, { text: name, query: debounced })), h('span', { className: 'year' }, year))))
+        : h('p', { className: 'note' }, `No language matches "${debounced}".`),
+      h('p', { className: 'note' }, 'Type quickly. The search runs only after you pause for 300 ms, so "searches run" grows slower than "keystrokes". Years are when each language first appeared.'));
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // State and data
+  // ─────────────────────────────────────────────────────────
+
+  const LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+  function findWinner(sq) {
+    for (const [a, b, c] of LINES) {
+      if (sq[a] && sq[a] === sq[b] && sq[a] === sq[c]) return { player: sq[a], line: [a, b, c] };
+    }
+    return null;
+  }
+
+  function TicTacToe() {
+    const [history, setHistory] = useState([Array(9).fill(null)]);
+    const [move, setMove] = useState(0);
+    const squares = history[move];
+    const xNext = move % 2 === 0;
+    const winner = findWinner(squares);
+    const status = winner ? `${winner.player} wins` : squares.every(Boolean) ? 'Draw' : `Next: ${xNext ? 'X' : 'O'}`;
+
+    function play(i) {
+      if (squares[i] || winner) return;
+      const next = squares.slice();
+      next[i] = xNext ? 'X' : 'O';
+      setHistory([...history.slice(0, move + 1), next]);
+      setMove(move + 1);
+    }
+
+    return h(Panel, { title: 'Tic-tac-toe', hooks: 'lifting state · immutable history' },
+      h('div', { className: 'ttt-wrap' },
+        h('div', { className: 'board', role: 'grid', 'aria-label': 'Board' },
+          squares.map((v, i) => h('button', {
+            key: i,
+            className: ['square', v === 'X' && 'x', winner && winner.line.includes(i) && 'win'].filter(Boolean).join(' '),
+            'aria-label': `Square ${i + 1}${v ? ', ' + v : ''}`,
+            onClick: () => play(i),
+          }, v || ''))),
+        h('div', { style: { display: 'grid', gap: 8, minWidth: 130, flex: 1 } },
+          h('div', { className: 'status' }, status),
+          h('ol', { className: 'moves' }, history.map((_, m) =>
+            h('li', { key: m }, h('button', { 'aria-current': m === move ? 'step' : undefined, onClick: () => setMove(m) },
+              m === 0 ? 'Game start' : `Move ${m}`)))))),
+      h('p', { className: 'note' }, 'The same game as the official React tutorial. Every move is stored, so you can jump back to any earlier board and play from there.'));
+  }
+
+  // Fake API with random delay. Sample data.
+  const PEOPLE = [
+    ['Giulia Rossi', 'Frontend engineer', 'Rome'], ['Marco Bianchi', 'Designer', 'Milan'],
+    ['Sofia Esposito', 'Product manager', 'Naples'], ['Luca Romano', 'Backend engineer', 'Turin'],
+    ['Chiara Ricci', 'Data analyst', 'Bologna'], ['Matteo Greco', 'QA engineer', 'Florence'],
+    ['Anna Novak', 'Frontend engineer', 'Ljubljana'], ['Jonas Weber', 'DevOps engineer', 'Berlin'],
+    ['Camille Martin', 'Designer', 'Lyon'], ['Lucía García', 'Backend engineer', 'Madrid'],
+    ['Pieter de Vries', 'Engineering manager', 'Utrecht'], ['Ingrid Larsen', 'Data scientist', 'Oslo'],
+    ['Tomáš Novák', 'Frontend engineer', 'Brno'], ['Ewa Kowalska', 'Mobile engineer', 'Kraków'],
+    ['Mateus Silva', 'Backend engineer', 'Porto'], ['Nora Schmidt', 'Technical writer', 'Vienna'],
+    ['Elias Berg', 'Security engineer', 'Stockholm'], ['Aoife Byrne', 'Product manager', 'Dublin'],
+    ['Dimitra Pappa', 'Designer', 'Athens'], ['Hugo Laurent', 'Frontend engineer', 'Brussels'],
+    ['Mia Horvat', 'QA engineer', 'Zagreb'], ['Oskar Nilsson', 'Data analyst', 'Malmö'],
+    ['Clara Fischer', 'DevOps engineer', 'Munich'], ['Andrei Popescu', 'Backend engineer', 'Bucharest'],
+  ];
+  const PAGE_SIZE = 6;
+  const PAGES = Math.ceil(PEOPLE.length / PAGE_SIZE);
+
+  function fakeApi(page, fail) {
+    const started = performance.now();
+    const delay = 400 + Math.random() * 900;
+    return new Promise((resolve, reject) => setTimeout(() => {
+      if (fail) reject(new Error('The server answered 503 (service unavailable).'));
+      else resolve({ page, rows: PEOPLE.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), ms: Math.round(performance.now() - started) });
+    }, delay));
+  }
+
+  // Custom hook: runs an async function when deps change and ignores stale answers.
+  function useAsync(fn, deps) {
+    const [state, setState] = useState({ status: 'loading' });
+    const [ignored, setIgnored] = useState(0);
+    useEffect(() => {
+      let current = true;
+      setState((s) => ({ status: 'loading', data: s.data }));
+      const skip = () => setIgnored((n) => n + 1);
+      fn().then(
+        (data) => (current ? setState({ status: 'done', data }) : skip()),
+        (error) => (current ? setState({ status: 'error', error }) : skip()),
+      );
+      return () => { current = false; }; // a newer request started: ignore this one
+    }, deps);
+    return { ...state, ignored };
+  }
+
+  function DataDemo() {
+    const [page, setPage] = useState(1);
+    const [fail, setFail] = useState(false);
+    const [attempt, setAttempt] = useState(0);
+    const req = useAsync(() => fakeApi(page, fail), [page, fail, attempt]);
+    const rows = req.data ? req.data.rows : [];
+    return h(Panel, { title: 'Loading data', hooks: 'custom hook · useAsync · effect cleanup' },
+      h('div', { className: 'pager' },
+        h('span', { className: `state-pill ${req.status}` },
+          req.status === 'loading' ? `loading page ${page}…` : req.status === 'error' ? 'failed' : `page ${req.data.page} in ${req.data.ms} ms`),
+        h('label', { className: 'toggle' },
+          h('input', { type: 'checkbox', id: 'fail-toggle', checked: fail, onChange: (e) => setFail(e.target.checked) }),
+          'Make requests fail')),
+      req.status === 'error'
+        ? h('div', { className: 'error-box', role: 'alert' },
+            h('span', null, req.error.message),
+            h('button', { onClick: () => setAttempt((a) => a + 1) }, 'Try again'))
+        : h('div', { className: 'table-box' },
+            h('table', { className: req.status === 'loading' && rows.length ? 'stale' : '' },
+              h('thead', null, h('tr', null, h('th', null, 'Name'), h('th', null, 'Role'), h('th', null, 'City'))),
+              h('tbody', null, rows.length
+                ? rows.map(([name, role, city]) => h('tr', { key: name }, h('td', null, name), h('td', null, role), h('td', null, city)))
+                : h('tr', null, h('td', { colSpan: 3, className: 'note' }, 'Loading…'))))),
+      h('div', { className: 'pager' },
+        h('button', { disabled: page === 1, onClick: () => setPage((p) => p - 1) }, '← Previous'),
+        h('span', { className: 'stats' }, h('span', null, 'page ', h('b', null, page), ` of ${PAGES}`), h('span', null, 'stale answers ignored ', h('b', null, req.ignored))),
+        h('button', { disabled: page === PAGES, onClick: () => setPage((p) => p + 1) }, 'Next →')),
+      h('p', { className: 'note' }, 'Each request takes 0.4–1.3 s. Click Next several times quickly: slower answers for old pages arrive late and are ignored, so the table never shows the wrong page. The people are sample data.'));
+  }
+
+  // Form with validation
+  const EMPTY_FORM = { name: '', email: '', password: '', plan: 'free', country: 'IT', bio: '', terms: false };
+  const COUNTRIES = { IT: 'Italy', DE: 'Germany', FR: 'France', ES: 'Spain', GB: 'United Kingdom', US: 'United States' };
+  const STRENGTH = ['Too short', 'Weak', 'Okay', 'Good', 'Strong'];
+  const BIO_MAX = 140;
+
+  function validate(f) {
+    const e = {};
+    if (f.name.trim().length < 2) e.name = 'Enter at least 2 characters.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email = 'Enter an email like name@example.com.';
+    if (f.password.length < 8) e.password = 'Use at least 8 characters.';
+    if (f.bio.length > BIO_MAX) e.bio = `Keep it to ${BIO_MAX} characters or fewer.`;
+    if (!f.terms) e.terms = 'Accept the terms to create the account.';
+    return e;
+  }
+  function strength(p) {
+    if (p.length < 8) return 0;
+    return 1 + (/[a-z]/.test(p) && /[A-Z]/.test(p)) + /\d/.test(p) + /[^A-Za-z0-9]/.test(p);
+  }
+
+  function Field({ id, label, error, hint, full, children }) {
+    return h('div', { className: ['field', full && 'full', error && 'invalid'].filter(Boolean).join(' ') },
+      label && h('label', { htmlFor: id }, label),
+      children,
+      error ? h('p', { className: 'error', id: `${id}-error` }, error) : hint && h('span', { className: 'hint' }, hint));
+  }
+
+  function SignupForm() {
+    const [form, setForm] = useState(EMPTY_FORM);
+    const [touched, setTouched] = useState({});
+    const [sent, setSent] = useState(null);
+    const errors = useMemo(() => validate(form), [form]);
+    const valid = Object.keys(errors).length === 0;
+
+    // One change handler for every field
+    const update = (e) => {
+      const { name, type, checked, value } = e.target;
+      setForm((f) => ({ ...f, [name]: type === 'checkbox' ? checked : value }));
+      setSent(null);
+    };
+    const touch = (e) => { const name = e.target.name; setTouched((t) => (t[name] ? t : { ...t, [name]: true })); };
+    const err = (name) => (touched[name] ? errors[name] : undefined);
+    const common = (name) => ({ id: `f-${name}`, name, onChange: update, onBlur: touch, 'aria-invalid': err(name) ? 'true' : 'false' });
+    const level = strength(form.password);
+
+    const onSubmit = (e) => {
+      e.preventDefault();
+      setTouched({ name: true, email: true, password: true, bio: true, terms: true });
+      if (valid) setSent({ ...form, password: '•'.repeat(form.password.length) });
+    };
+    const reset = () => { setForm(EMPTY_FORM); setTouched({}); setSent(null); };
+
+    return h(Panel, { title: 'Sign-up form', hooks: 'controlled inputs · derived state', wide: true },
+      h('form', { className: 'form', onSubmit, noValidate: true },
+        h(Field, { id: 'f-name', label: 'Full name', error: err('name') },
+          h('input', { ...common('name'), type: 'text', value: form.name, autocomplete: 'name' })),
+        h(Field, { id: 'f-email', label: 'Email', error: err('email') },
+          h('input', { ...common('email'), type: 'email', value: form.email, autocomplete: 'email' })),
+        h(Field, { id: 'f-password', label: 'Password', error: err('password'), hint: `Strength: ${STRENGTH[level]}` },
+          h('input', { ...common('password'), type: 'password', value: form.password, autocomplete: 'new-password' }),
+          h('div', { className: 'meter', 'data-level': level, 'aria-hidden': 'true' }, h('span'), h('span'), h('span'), h('span'))),
+        h(Field, { id: 'f-country', label: 'Country' },
+          h('select', { ...common('country'), value: form.country },
+            Object.entries(COUNTRIES).map(([code, name]) => h('option', { key: code, value: code }, name)))),
+        h('div', { className: 'field' },
+          h('span', { className: 'label', id: 'plan-label' }, 'Plan'),
+          h('div', { className: 'choice', role: 'radiogroup', 'aria-labelledby': 'plan-label' },
+            [['free', 'Free'], ['pro', 'Pro · €9/month'], ['team', 'Team · €29/month']].map(([value, label]) =>
+              h('label', { key: value },
+                h('input', { type: 'radio', name: 'plan', id: `f-plan-${value}`, value, checked: form.plan === value, onChange: update }),
+                label)))),
+        h(Field, { id: 'f-bio', label: 'Short bio', error: err('bio') },
+          h('textarea', { ...common('bio'), value: form.bio, rows: 2 }),
+          h('div', { className: 'hint counter-hint' },
+            h('span', null, 'Optional'),
+            h('span', { className: form.bio.length > BIO_MAX ? 'over' : '' }, `${form.bio.length} / ${BIO_MAX}`))),
+        h(Field, { id: 'f-terms', full: true, error: err('terms') },
+          h('label', { className: 'toggle', style: { color: 'var(--ink)' } },
+            h('input', { ...common('terms'), type: 'checkbox', checked: form.terms }),
+            'I accept the terms of service')),
+        h('div', { className: 'row form-actions' },
+          h('button', { className: 'primary', type: 'submit' }, 'Create account'),
+          h('button', { type: 'button', onClick: reset }, 'Reset'),
+          h('span', { className: 'note' }, valid ? 'All fields are valid.' : `${Object.keys(errors).length} field(s) still need attention.`))),
+      sent && h(Fragment, null,
+        h('p', { className: 'success', role: 'status' }, 'Account created. This is the data the form would send:'),
+        h('pre', { className: 'result' }, JSON.stringify(sent, null, 2))),
+      h('p', { className: 'note' }, 'Every input is controlled: its value comes from state. Errors appear after you leave a field, or when you submit. Nothing is sent anywhere.'));
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // Graphics and refs
+  // ─────────────────────────────────────────────────────────
+
+  const INKS = [['Teal', '#0c9aa6'], ['Coral', '#e0624a'], ['Amber', '#e0a020'], ['Violet', '#7a5ce0'], ['Graphite', '#6b7780']];
+
+  function drawStroke(ctx, s) {
+    ctx.strokeStyle = s.color;
+    ctx.lineWidth = s.size;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(s.points[0][0], s.points[0][1]);
+    for (const [x, y] of s.points) ctx.lineTo(x, y);
+    if (s.points.length === 1) ctx.lineTo(s.points[0][0] + 0.01, s.points[0][1]);
+    ctx.stroke();
+  }
+
+  function DrawingPad() {
+    const canvasRef = useRef(null);
+    const strokes = useRef([]);      // drawing data lives in a ref: changing it doesn't re-render
+    const current = useRef(null);
+    const [color, setColor] = useState(INKS[0][1]);
+    const [size, setSize] = useState(5);
+    const [count, setCount] = useState(0);
+
+    const redraw = () => {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const s of strokes.current) drawStroke(ctx, s);
+    };
+
+    useLayoutEffect(() => {
+      const canvas = canvasRef.current;
+      const resize = () => {
+        const ratio = window.devicePixelRatio || 1;
+        canvas.width = canvas.clientWidth * ratio;
+        canvas.height = canvas.clientHeight * ratio;
+        canvas.getContext('2d').setTransform(ratio, 0, 0, ratio, 0, 0);
+        redraw();
+      };
+      resize();
+      window.addEventListener('resize', resize);
+      return () => window.removeEventListener('resize', resize);
+    }, []);
+
+    const point = (e) => {
+      const r = canvasRef.current.getBoundingClientRect();
+      return [e.clientX - r.left, e.clientY - r.top];
+    };
+    const start = (e) => {
+      e.currentTarget.setPointerCapture(e.pointerId);
+      current.current = { color, size, points: [point(e)] };
+      strokes.current.push(current.current);
+      redraw();
+    };
+    const move = (e) => {
+      if (!current.current) return;
+      current.current.points.push(point(e));
+      redraw();
+    };
+    const end = () => {
+      if (!current.current) return;
+      current.current = null;
+      setCount(strokes.current.length);
+    };
+    const undo = () => { strokes.current.pop(); redraw(); setCount(strokes.current.length); };
+    const clear = () => { strokes.current = []; redraw(); setCount(0); };
+
+    return h(Panel, { title: 'Drawing pad', hooks: 'useRef · useLayoutEffect · canvas' },
+      h('canvas', {
+        ref: canvasRef, className: 'pad', 'aria-label': 'Drawing area',
+        onPointerDown: start, onPointerMove: move, onPointerUp: end, onPointerCancel: end,
+      }),
+      h('div', { className: 'row', style: { justifyContent: 'space-between' } },
+        h('div', { className: 'swatches', role: 'group', 'aria-label': 'Ink color' },
+          INKS.map(([name, hex]) => h('button', {
+            key: hex, style: { background: hex }, 'aria-label': name, title: name,
+            'aria-pressed': String(color === hex), onClick: () => setColor(hex),
+          }))),
+        h('label', { className: 'range' }, 'size',
+          h('input', { type: 'range', id: 'brush-size', min: 1, max: 24, value: size, onChange: (e) => setSize(Number(e.target.value)) }),
+          h('span', { style: { width: '3ch' } }, size))),
+      h('div', { className: 'row' },
+        h('button', { onClick: undo, disabled: count === 0 }, 'Undo'),
+        h('button', { onClick: clear, disabled: count === 0 }, 'Clear'),
+        h('span', { className: 'note' }, `${count} stroke${count === 1 ? '' : 's'}`)),
+      h('p', { className: 'note' }, 'Draw with a mouse, pen or finger. The strokes are kept in a ref and drawn straight onto the canvas, so moving the pointer causes no re-renders.'));
+  }
+
+  const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  function randomWeek() { return DAYS.map(() => 2 + Math.round(Math.random() * 18)); }
+
+  function Chart() {
+    const renders = useRenderCount();
+    const [data, setData] = useState(randomWeek);
+    const W = 320, H = 170, padL = 28, padB = 22, padT = 18;
+    const max = 20;
+    const bw = (W - padL) / data.length;
+    const y = useCallback((v) => padT + (H - padT - padB) * (1 - v / max), []);
+    const peak = useMemo(() => Math.max(...data), [data]);
+    return h(Panel, { title: 'SVG chart', hooks: 'useMemo · useCallback · SVG', renders },
+      h('div', { className: 'chart-box' },
+        h('svg', { className: 'chart', viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Commits per day' },
+          [0, 10, 20].map((t) => h(Fragment, { key: t },
+            h('line', { className: 'axis', x1: padL, x2: W, y1: y(t), y2: y(t) }),
+            h('text', { className: 'tick', x: padL - 6, y: y(t) + 4, 'text-anchor': 'end' }, t))),
+          data.map((v, i) => h('g', { key: DAYS[i] },
+            h('rect', { className: v === peak ? 'bar max' : 'bar', x: padL + i * bw + 5, width: bw - 10, y: y(v), height: y(0) - y(v), rx: 2 }),
+            h('text', { className: 'val', x: padL + i * bw + bw / 2, y: y(v) - 5, 'text-anchor': 'middle' }, v),
+            h('text', { className: 'tick', x: padL + i * bw + bw / 2, y: H - 6, 'text-anchor': 'middle' }, DAYS[i]))))),
+      h('div', { className: 'row' },
+        h('button', { className: 'primary', onClick: () => setData(randomWeek()) }, 'New week'),
+        h('span', { className: 'note' }, `Commits per day (sample data). Peak: ${peak}`)),
+      h('p', { className: 'note' }, 'Elements inside <svg> are created in the SVG namespace automatically. The bars animate with a CSS transition, because the diff updates the existing <rect> nodes instead of replacing them.'));
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // Performance: Conway's Game of Life
+  // ─────────────────────────────────────────────────────────
+
+  const COLS = 40, ROWS = 22, TOTAL = COLS * ROWS;
+
+  function randomCells() { return Array.from({ length: TOTAL }, () => Math.random() < 0.3); }
+  function lifeStep(cells) {
+    const next = new Array(TOTAL);
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        let n = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if ((dx || dy) && cells[((y + dy + ROWS) % ROWS) * COLS + ((x + dx + COLS) % COLS)]) n++;
+          }
+        }
+        const alive = cells[y * COLS + x];
+        next[y * COLS + x] = alive ? n === 2 || n === 3 : n === 3;
+      }
+    }
+    return next;
+  }
+  function countChanges(a, b) { let c = 0; for (let i = 0; i < TOTAL; i++) if (a[i] !== b[i]) c++; return c; }
+
+  function lifeReducer(state, action) {
+    switch (action.type) {
+      case 'step': {
+        const cells = lifeStep(state.cells);
+        return { cells, gen: state.gen + 1, changed: countChanges(state.cells, cells) };
+      }
+      case 'random': return { cells: randomCells(), gen: 0, changed: TOTAL };
+      case 'clear': return { cells: new Array(TOTAL).fill(false), gen: 0, changed: 0 };
+      case 'toggle': {
+        const cells = state.cells.slice();
+        cells[action.i] = !cells[action.i];
+        return { ...state, cells, changed: 1 };
+      }
+      default: return state;
+    }
+  }
+
+  function GameOfLife() {
+    const [state, dispatch] = useReducer(lifeReducer, null, () => ({ cells: randomCells(), gen: 0, changed: TOTAL }));
+    const [running, setRunning] = useState(false);
+    const [speed, setSpeed] = useState(12);
+    const timeRef = useRef(null);
+    const renderStart = performance.now();
+
+    useEffect(() => {
+      if (!running) return;
+      const id = setInterval(() => dispatch({ type: 'step' }), 1000 / speed);
+      return () => clearInterval(id);
+    }, [running, speed]);
+
+    // No deps: runs after every render. Writes straight to the DOM, so it doesn't cause another render.
+    useEffect(() => {
+      if (timeRef.current) timeRef.current.textContent = `${(performance.now() - renderStart).toFixed(1)} ms`;
+    });
+
+    const population = state.cells.reduce((n, alive) => n + (alive ? 1 : 0), 0);
+    // One click handler on the grid instead of 880 handlers (event delegation).
+    const onGridClick = (e) => {
+      const i = e.target.getAttribute('data-i');
+      if (i != null) dispatch({ type: 'toggle', i: Number(i) });
+    };
+
+    return h(Panel, { title: 'Game of Life', hooks: 'useReducer · 880 elements per render', wide: true },
+      h('div', { className: 'life-bar' },
+        h('div', { className: 'row' },
+          h('button', { className: 'primary', onClick: () => setRunning((r) => !r) }, running ? 'Pause' : 'Play'),
+          h('button', { onClick: () => dispatch({ type: 'step' }), disabled: running }, 'Step'),
+          h('button', { onClick: () => dispatch({ type: 'random' }) }, 'Random'),
+          h('button', { onClick: () => { setRunning(false); dispatch({ type: 'clear' }); } }, 'Clear')),
+        h('label', { className: 'range' }, 'speed',
+          h('input', { type: 'range', id: 'life-speed', min: 1, max: 40, value: speed, onChange: (e) => setSpeed(Number(e.target.value)) }),
+          h('span', { style: { width: '8ch' } }, `${speed} gen/s`))),
+      h('div', { className: 'life', style: { '--cols': COLS }, onClick: onGridClick, role: 'img', 'aria-label': `Game of Life grid, ${population} live cells` },
+        state.cells.map((alive, i) => h('div', { className: alive ? 'cell on' : 'cell', 'data-i': i }))),
+      h('div', { className: 'stats' },
+        h('span', null, 'generation ', h('b', null, state.gen)),
+        h('span', null, 'alive ', h('b', null, population)),
+        h('span', null, 'cells changed ', h('b', null, state.changed), ` of ${TOTAL}`),
+        h('span', null, 'last render ', h('b', { ref: timeRef }))),
+      h('p', { className: 'note' }, 'Every generation re-renders all 880 cells, but the diff only writes to the cells whose class changed. Click cells to toggle them. One click handler on the grid serves every cell.'));
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // App
+  // ─────────────────────────────────────────────────────────
+
+  function App() {
+    return h(Fragment, null,
+      h(Section, { id: 'basics', title: 'Basics', intro: 'State, effects, context and composing components.' },
+        h(Counter), h(Stopwatch), h(LocaleDemo), h(CompositionDemo)),
+      h(Section, { id: 'lists', title: 'Lists and keys', intro: 'How the diff matches list items, and a custom hook for search.' },
+        h(Todos), h(KeysDemo), h(SearchDemo)),
+      h(Section, { id: 'state', title: 'State and data', intro: 'Game history, async loading and a validated form.' },
+        h(TicTacToe), h(DataDemo), h(SignupForm)),
+      h(Section, { id: 'graphics', title: 'Graphics and refs', intro: 'Reaching the real DOM with refs, and drawing with SVG.' },
+        h(DrawingPad), h(Chart)),
+      h(Section, { id: 'performance', title: 'Performance', intro: 'Hundreds of elements re-rendered many times a second.' },
+        h(GameOfLife)));
+  }
+
+  createRoot(document.getElementById('app')).render(h(App));
+</script>
+
+</html>

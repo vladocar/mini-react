@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mini-react Benchmark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --bg: #f3f6f7;
+    --surface: #ffffff;
+    --ink: #15212b;
+    --muted: #5a6a77;
+    --line: #d9e1e6;
+    --accent: #0c7a84;
+    --accent-soft: #e1f1f2;
+    --slow: #b3412e;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0e1418; --surface: #161e24; --ink: #e4ecf1; --muted: #93a3af;
+      --line: #28343c; --accent: #3fc1cb; --accent-soft: #173238; --slow: #e27a66;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0e1418; --surface: #161e24; --ink: #e4ecf1; --muted: #93a3af;
+    --line: #28343c; --accent: #3fc1cb; --accent-soft: #173238; --slow: #e27a66;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); padding: 0 16px; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding-block: 40px 56px; display: grid; gap: 20px; }
+  header { display: grid; gap: 10px; max-width: 70ch; }
+  .eyebrow { font: 600 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .eyebrow a { color: inherit; }
+  h1 { font-size: clamp(28px, 4.2vw, 40px); line-height: 1.1; margin: 0; letter-spacing: -.02em; text-wrap: balance; }
+  header p { margin: 0; color: var(--muted); }
+  a { color: var(--accent); }
+  code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 14px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; }
+  .controls fieldset { border: 0; padding: 0; margin: 0; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .controls legend { float: left; font: 600 11px/2 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-right: 10px; }
+  .controls label { display: flex; gap: 6px; align-items: center; font-size: 14px; }
+  input[type="checkbox"] { accent-color: var(--accent); }
+  select, button { font: inherit; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 7px; padding: 7px 12px; }
+  button { cursor: pointer; font-weight: 500; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+  button:disabled { opacity: .5; cursor: progress; }
+  :is(button, select, input):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .status { font: 12.5px/1.4 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .status.warn { color: var(--slow); }
+  .progress { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+  .progress span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .15s; }
+
+  .table-box { overflow-x: auto; }
+  table.results { border-collapse: collapse; width: 100%; font-size: 14px; }
+  .results th, .results td { padding: 9px 12px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  .results th:first-child, .results td:first-child { text-align: left; }
+  .results thead th { font: 600 11px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .results tbody td { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 13px; }
+  .results tbody td:first-child { font-family: var(--sans); font-size: 14px; }
+  .results td.best { color: var(--accent); font-weight: 600; }
+  .results td.best::before { content: "● "; font-size: 9px; vertical-align: 2px; }
+  .results td.slow { color: var(--slow); }
+  .results .desc { display: block; font-size: 12px; color: var(--muted); }
+  .results tfoot td { font-weight: 600; border-bottom: 0; }
+  .results td.pending { color: var(--muted); }
+
+  .notes { display: grid; gap: 6px; font-size: 13.5px; color: var(--muted); max-width: 80ch; }
+  .notes p { margin: 0; }
+  .stage-label { font: 600 11px/1 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  #stage { height: 160px; overflow: hidden; border: 1px dashed var(--line); border-radius: 7px; font-size: 12px; }
+  #stage table { border-collapse: collapse; width: 100%; }
+  #stage td { padding: 2px 8px; border-bottom: 1px solid var(--line); }
+  #stage tr.danger { background: var(--accent-soft); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">mini-react · <a href="demo.html">demos</a> · <a href="tutorial.html">tutorial</a></span>
+    <h1>Benchmark: mini-react vs. React 18</h1>
+    <p>The same table app, written once, runs on each library. The operations come from <a href="https://github.com/krausest/js-framework-benchmark">js-framework-benchmark</a>, the standard test for UI libraries. Times include the browser's layout work.</p>
+  </header>
+
+  <section class="panel">
+    <div class="controls">
+      <fieldset id="libs">
+        <legend>Libraries</legend>
+      </fieldset>
+      <label>Runs per test
+        <select id="runs">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="20">20</option>
+        </select>
+      </label>
+      <button class="primary" id="run">Run benchmark</button>
+    </div>
+    <div class="progress" aria-hidden="true"><span id="bar"></span></div>
+    <div class="status" id="status" role="status">Ready. A full run takes about 30 seconds with 10 runs per test.</div>
+    <div class="table-box">
+      <table class="results" id="results"></table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="stage-label">Rendering area (the table being tested)</div>
+    <div id="stage"></div>
+  </section>
+
+  <div class="notes">
+    <p>Each number is the median time in milliseconds, from the moment the action is dispatched until the page is updated and laid out. The fastest library for each test is marked. Numbers more than twice the fastest are shown in red.</p>
+    <p>Close other tabs and don't use the page while it runs. Results vary by 10–20% between runs, so compare big differences, not small ones.</p>
+    <p>React is loaded from cdnjs.cloudflare.com, so it needs an internet connection. Without one, only mini-react runs.</p>
+  </div>
+</div>
+
+<script src="dist/mini-react.global.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ── Library adapters: the app below only uses these functions ───────────
+  const LIBS = [];
+  if (window.MiniReact) {
+    const M = window.MiniReact;
+    const mini = {
+      h: M.h, useReducer: M.useReducer, memo: M.memo, flush: M.flushSync,
+      mount(element, container) { const root = M.createRoot(container); root.render(element); return () => root.unmount(); },
+    };
+    LIBS.push({ id: 'mini', name: 'mini-react', lib: mini, memo: false, on: true });
+    LIBS.push({ id: 'mini-memo', name: 'mini-react + memo', lib: mini, memo: true, on: true });
+  }
+  if (window.React && window.ReactDOM) {
+    const react = {
+      h: React.createElement, useReducer: React.useReducer, memo: React.memo, flush: ReactDOM.flushSync,
+      mount(element, container) {
+        const root = ReactDOM.createRoot(container);
+        ReactDOM.flushSync(() => root.render(element));
+        return () => root.unmount();
+      },
+    };
+    LIBS.push({ id: 'react', name: 'React ' + React.version, lib: react, memo: false, on: true });
+    LIBS.push({ id: 'react-memo', name: 'React + memo', lib: react, memo: true, on: true });
+  }
+
+  // ── Data ────────────────────────────────────────────────────────────────
+  const ADJ = ['pretty', 'large', 'big', 'small', 'tall', 'short', 'long', 'handsome', 'plain', 'quaint', 'clean', 'elegant', 'easy', 'angry', 'crazy', 'helpful', 'mushy', 'odd', 'unsightly', 'adorable', 'important', 'inexpensive', 'cheap', 'expensive', 'fancy'];
+  const COLOR = ['red', 'yellow', 'blue', 'green', 'pink', 'brown', 'purple', 'white', 'black', 'orange'];
+  const NOUN = ['table', 'chair', 'house', 'bbq', 'desk', 'car', 'pony', 'cookie', 'sandwich', 'burger', 'pizza', 'mouse', 'keyboard'];
+  let seed = 1;
+  const rnd = (n) => { seed = (seed * 16807) % 2147483647; return seed % n; };
+  let nextId = 1;
+  const buildRows = (n) => Array.from({ length: n }, () => ({ id: nextId++, label: `${ADJ[rnd(ADJ.length)]} ${COLOR[rnd(COLOR.length)]} ${NOUN[rnd(NOUN.length)]}` }));
+
+  function reducer(s, a) {
+    switch (a.type) {
+      case 'run': return { rows: buildRows(a.n), selected: 0 };
+      case 'add': return { ...s, rows: s.rows.concat(buildRows(a.n)) };
+      case 'update': return { ...s, rows: s.rows.map((r, i) => (i % 10 === 0 ? { ...r, label: r.label + ' !!!' } : r)) };
+      case 'clear': return { rows: [], selected: 0 };
+      case 'swap': {
+        if (s.rows.length < 999) return s;
+        const rows = s.rows.slice();
+        const t = rows[1]; rows[1] = rows[998]; rows[998] = t;
+        return { ...s, rows };
+      }
+      case 'remove': return { ...s, rows: s.rows.filter((r) => r.id !== a.id) };
+      case 'select': return { ...s, selected: a.id };
+      default: return s;
+    }
+  }
+
+  // ── The app, written once against the adapter ───────────────────────────
+  function makeApp(entry, container) {
+    const { h, useReducer, memo, flush, mount } = entry.lib;
+    let dispatch = null;
+    let state = null;
+    function RowImpl({ row, selected, onSelect, onRemove }) {
+      return h('tr', { className: selected ? 'danger' : '' },
+        h('td', { className: 'col-md-1' }, row.id),
+        h('td', { className: 'col-md-4' }, h('a', { onClick: () => onSelect(row.id) }, row.label)),
+        h('td', { className: 'col-md-1' }, h('a', { onClick: () => onRemove(row.id) }, '×')),
+        h('td', { className: 'col-md-6' }));
+    }
+    const Row = entry.memo ? memo(RowImpl) : RowImpl;
+    const onSelect = (id) => dispatch({ type: 'select', id });
+    const onRemove = (id) => dispatch({ type: 'remove', id });
+    function App() {
+      const [s, d] = useReducer(reducer, { rows: [], selected: 0 });
+      dispatch = d;
+      state = s;
+      return h('table', null, h('tbody', null,
+        s.rows.map((row) => h(Row, { key: row.id, row, selected: row.id === s.selected, onSelect, onRemove }))));
+    }
+    const unmount = mount(h(App), container);
+    return {
+      act(action) { flush(() => dispatch(action)); return container.offsetHeight; }, // offsetHeight forces layout
+      rows: () => state.rows,
+      destroy() { unmount(); },
+    };
+  }
+
+  // ── Tests ───────────────────────────────────────────────────────────────
+  const TESTS = [
+    { name: 'Create 1,000 rows', desc: 'empty table → 1,000 rows', setup: [{ type: 'clear' }], action: () => ({ type: 'run', n: 1000 }) },
+    { name: 'Replace all 1,000 rows', desc: 'every row gets a new key', setup: [{ type: 'run', n: 1000 }], action: () => ({ type: 'run', n: 1000 }) },
+    { name: 'Update every 10th row', desc: '100 labels change', setup: [{ type: 'run', n: 1000 }], action: () => ({ type: 'update' }) },
+    { name: 'Select a row', desc: 'one row changes class', setup: [{ type: 'run', n: 1000 }], action: (rows) => ({ type: 'select', id: rows[rnd(rows.length)].id }) },
+    { name: 'Swap 2 rows', desc: 'rows 2 and 999 trade places', setup: [{ type: 'run', n: 1000 }], action: () => ({ type: 'swap' }) },
+    { name: 'Remove a row', desc: 'one row near the top', setup: [{ type: 'run', n: 1000 }], action: (rows) => ({ type: 'remove', id: rows[10 + rnd(50)].id }) },
+    { name: 'Create 10,000 rows', desc: 'empty table → 10,000 rows', setup: [{ type: 'clear' }], action: () => ({ type: 'run', n: 10000 }) },
+    { name: 'Append 1,000 rows', desc: '1,000 → 2,000 rows', setup: [{ type: 'run', n: 1000 }], action: () => ({ type: 'add', n: 1000 }) },
+    { name: 'Clear 1,000 rows', desc: '1,000 rows → empty', setup: [{ type: 'run', n: 1000 }], action: () => ({ type: 'clear' }) },
+  ];
+  const WARMUP = 2;
+
+  // ── UI (plain DOM, so it doesn't affect the libraries being measured) ───
+  const $ = (id) => document.getElementById(id);
+  const libBox = $('libs');
+  for (const entry of LIBS) {
+    const label = document.createElement('label');
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.id = 'lib-' + entry.id;
+    box.checked = entry.on;
+    box.addEventListener('change', () => { entry.on = box.checked; renderResults({}); });
+    label.append(box, entry.name);
+    libBox.append(label);
+  }
+  if (!window.React) {
+    $('status').textContent = 'React could not be loaded (no internet connection?). Only mini-react will run.';
+    $('status').classList.add('warn');
+  }
+
+  function renderResults(results) {
+    const libs = LIBS.filter((l) => l.on);
+    const table = $('results');
+    let html = '<thead><tr><th>Test</th>' + libs.map((l) => `<th>${l.name}</th>`).join('') + '</tr></thead><tbody>';
+    const totals = libs.map(() => 0);
+    let complete = true;
+    for (const test of TESTS) {
+      const values = libs.map((l) => (results[l.id] ? results[l.id][test.name] : undefined));
+      const done = values.filter((v) => v !== undefined);
+      const best = done.length ? Math.min(...done) : 0;
+      html += `<tr><td>${test.name}<span class="desc">${test.desc}</span></td>`;
+      values.forEach((v, i) => {
+        if (v === undefined) { complete = false; html += '<td class="pending">–</td>'; return; }
+        totals[i] += v;
+        const cls = done.length > 1 && v === best ? 'best' : done.length > 1 && v > best * 2 ? 'slow' : '';
+        html += `<td class="${cls}">${v.toFixed(1)}</td>`;
+      });
+      html += '</tr>';
+    }
+    html += '</tbody>';
+    if (complete) {
+      html += '<tfoot><tr><td>Total</td>' + totals.map((t) => `<td>${t.toFixed(0)}</td>`).join('') + '</tr></tfoot>';
+    }
+    table.innerHTML = html;
+  }
+  renderResults({});
+
+  const pause = () => new Promise((r) => setTimeout(r, 0));
+  const median = (list) => { const s = list.slice().sort((a, b) => a - b); return s[s.length >> 1]; };
+
+  $('run').addEventListener('click', async () => {
+    const libs = LIBS.filter((l) => l.on);
+    if (!libs.length) { $('status').textContent = 'Pick at least one library.'; return; }
+    const runs = Number($('runs').value);
+    const button = $('run');
+    button.disabled = true;
+    const results = {};
+    const totalSteps = libs.length * TESTS.length * (runs + WARMUP);
+    let step = 0;
+    const stage = $('stage');
+
+    for (const entry of libs) {
+      results[entry.id] = {};
+      stage.textContent = '';
+      const container = document.createElement('div');
+      stage.append(container);
+      const app = makeApp(entry, container);
+      for (const test of TESTS) {
+        const times = [];
+        for (let i = 0; i < runs + WARMUP; i++) {
+          for (const a of test.setup) app.act(a);
+          await pause(); // let the browser finish pending work before measuring
+          const action = test.action(app.rows());
+          const start = performance.now();
+          app.act(action);
+          const time = performance.now() - start;
+          if (i >= WARMUP) times.push(time);
+          step++;
+          $('bar').style.width = `${(step / totalSteps) * 100}%`;
+        }
+        results[entry.id][test.name] = median(times);
+        $('status').textContent = `${entry.name}: ${test.name}…`;
+        renderResults(results);
+      }
+      app.act({ type: 'clear' });
+      app.destroy();
+    }
+    $('status').textContent = `Done. ${runs} runs per test, median shown. Run it again to see how much the numbers vary.`;
+    button.disabled = false;
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Logs and caches
+npm-debug.log*
+*.log
+.npm/
+.cache/
+
+# Editors and OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Local site build (made by the Pages workflow)
+_site/
