@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22, 24]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Check that dist/ is up to date
+        run: |
+          if ! git diff --exit-code -- dist/; then
+            echo "::error::dist/ doesn't match src/. Run 'npm run build' and commit the result."
+            exit 1
+          fi
+
+      - name: Test
+        run: npm test
