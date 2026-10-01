@@ -5,6 +5,8 @@
 ![dependencies](https://img.shields.io/badge/dependencies-0-0c7a84)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+[![A Counter component written with mini-react, rendered live and clicked three times](assets/demo.gif)](https://vladocar.github.io/mini-react/)
+
 A small React-like UI library in one file. It has a virtual DOM with keyed diffing, function components, hooks,
 context and `memo`, in about 3.5 KB gzipped with no dependencies. The source is written to be read: every part is commented.
 
